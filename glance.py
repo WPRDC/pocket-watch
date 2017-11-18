@@ -46,6 +46,8 @@ for i,package in enumerate(packages):
         package_id = package['id']
         metadata_modified = datetime.strptime(package['metadata_modified'],"%Y-%m-%dT%H:%M:%S.%f")
         publishing_frequency = package['frequency_publishing']
+        data_change_rate = package['frequency_data_change']
+        
         if publishing_frequency in period:
             publishing_period = period[publishing_frequency]
         else:
@@ -57,16 +59,20 @@ for i,package in enumerate(packages):
         if publishing_period is not None:
             lateness = datetime.now() - (metadata_modified + publishing_period)
             if lateness.total_seconds() > 0:
-                output = "{}) {} | metadata_modified = {}, but updates {}, making it STALE!".format(i,title,metadata_modified,package['frequency_publishing'])
-                stale_packages[package_id] = {'output': output, 
-                    'last_modified': metadata_modified,
-                    'normalized_lateness': lateness.total_seconds()/
-                                        publishing_period.total_seconds(),
-                    'publishing_frequency': publishing_frequency,
-                    'json_index': i,
-                    'title': title,
-                    }
-                stale_count += 1
+                if data_change_rate not in nonperiods:
+                    output = "{}) {} | metadata_modified = {}, but updates {}, making it STALE!".format(i,title,metadata_modified,package['frequency_publishing'])
+                    stale_packages[package_id] = {'output': output, 
+                        'last_modified': metadata_modified,
+                        'normalized_lateness': lateness.total_seconds()/
+                                            publishing_period.total_seconds(),
+                        'publishing_frequency': publishing_frequency,
+                        'data_change_rate': data_change_rate,
+                        'json_index': i,
+                        'title': title,
+                        }
+                    stale_count += 1
+                else:
+                    print("{} is not considered stale because its data change rate is {}".format(title,package['frequency_data_change']))
         packages_with_frequencies += 1 
 
 # Sort stale packages by relative tardiness so the most recently tardy ones 
