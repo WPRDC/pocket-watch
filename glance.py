@@ -1,3 +1,13 @@
+# This script scans the current package list of a CKAN instance
+# and finds the datasets that have not been updated on their
+# self-identified schedule.
+
+# Note that each resource has a 'last_modified' timestamp, which 
+# could also be examined to study staleness. The alternate approach
+# would be to compare the 'last_modified' timestamp of the most 
+# recently modified resource with the nominal publication frequency
+# and the current date.
+
 import requests, textwrap
 
 from datetime import datetime, timedelta
@@ -18,7 +28,9 @@ period = {'Annually': timedelta(days = 366),
         'Bi-Annually': timedelta(days = 183),
         'Quarterly': timedelta(days = 31+30+31),
         'Monthly': timedelta(days = 31),
+        'Bi-Monthly': timedelta(days = 16),
         'Weekly': timedelta(days = 7),
+        'Bi-Weekly': timedelta(days = 4),
         'Daily': timedelta(days = 1),
         'Hourly': timedelta(hours = 1),
         'Multiple Times per Hour': timedelta(minutes=30)}
