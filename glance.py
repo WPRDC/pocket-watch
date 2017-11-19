@@ -63,7 +63,7 @@ for i,package in enumerate(packages):
                     output = "{}) {} | metadata_modified = {}, but updates {}, making it STALE!".format(i,title,metadata_modified,package['frequency_publishing'])
                     stale_packages[package_id] = {'output': output, 
                         'last_modified': metadata_modified,
-                        'normalized_lateness': lateness.total_seconds()/
+                        'cycles_late': lateness.total_seconds()/
                                             publishing_period.total_seconds(),
                         'publishing_frequency': publishing_frequency,
                         'data_change_rate': data_change_rate,
@@ -79,7 +79,7 @@ for i,package in enumerate(packages):
 # appear at the bottom of the output and the most egregiously late ones
 # at the top.
 stale_ps_sorted = sorted(stale_packages.iteritems(), 
-                        key=lambda (k,v): -v['normalized_lateness'])
+                        key=lambda (k,v): -v['cycles_late'])
 print("\nDatasets by Staleness: ")
 template = "{{:<33.33}}  {}  {{:<10.10}}  {{:<12.12}}"
 fmt = template.format("{:>16.20}")
@@ -93,7 +93,7 @@ print("=========================================================================
 fmt = template.format("{:>16.3f}")
 for k,v in stale_ps_sorted:
     last_modified_date = datetime.strftime(v['last_modified'], "%Y-%m-%d")
-    print(fmt.format(v['title'],v['normalized_lateness'],
+    print(fmt.format(v['title'],v['cycles_late'],
         last_modified_date,v['publishing_frequency']))
 
 print("=========================================================================\n")
