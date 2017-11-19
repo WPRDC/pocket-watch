@@ -13,6 +13,24 @@ import requests, textwrap
 from datetime import datetime, timedelta
 from pprint import pprint
 
+def print_table(stale_ps_sorted):
+    template = "{{:<33.33}}  {}  {{:<10.10}}  {{:<12.12}}"
+    fmt = template.format("{:>16.20}")
+    #print(fmt.format("Title","Normalized lateness",
+    #                "metadata_modified","publishing frequency"))
+
+    print(fmt.format("","", "metadata_","publishing"))
+    print(fmt.format("Title","Cycles late", "modified","frequency"))
+    print("=========================================================================")
+    #fmt = "{:<33.33} {:<20.3f} {:<10.10} {:<12.12}"
+    fmt = template.format("{:>16.3f}")
+    for k,v in stale_ps_sorted:
+        last_modified_date = datetime.strftime(v['last_modified'], "%Y-%m-%d")
+        print(fmt.format(v['title'],v['cycles_late'],
+            last_modified_date,v['publishing_frequency']))
+    print("=========================================================================\n")
+
+
 host = "data.wprdc.org"
 url = "https://{}/api/3/action/current_package_list_with_resources?limit=999999".format(host)
 r = requests.get(url)
@@ -81,22 +99,7 @@ for i,package in enumerate(packages):
 stale_ps_sorted = sorted(stale_packages.iteritems(), 
                         key=lambda (k,v): -v['cycles_late'])
 print("\nDatasets by Staleness: ")
-template = "{{:<33.33}}  {}  {{:<10.10}}  {{:<12.12}}"
-fmt = template.format("{:>16.20}")
-#print(fmt.format("Title","Normalized lateness",
-#                "metadata_modified","publishing frequency"))
-
-print(fmt.format("","", "metadata_","publishing"))
-print(fmt.format("Title","Cycles late", "modified","frequency"))
-print("=========================================================================")
-#fmt = "{:<33.33} {:<20.3f} {:<10.10} {:<12.12}"
-fmt = template.format("{:>16.3f}")
-for k,v in stale_ps_sorted:
-    last_modified_date = datetime.strftime(v['last_modified'], "%Y-%m-%d")
-    print(fmt.format(v['title'],v['cycles_late'],
-        last_modified_date,v['publishing_frequency']))
-
-print("=========================================================================\n")
+print_table(stale_ps_sorted)
 
 coda = "Out of {} packages, only {} have specified publication frequencies. {} are stale (past their refresh-by date), according to the metadata_modified field.".format(len(packages),packages_with_frequencies,stale_count)
 print(textwrap.fill(coda,70))
