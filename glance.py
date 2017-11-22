@@ -101,5 +101,11 @@ stale_ps_sorted = sorted(stale_packages.iteritems(),
 print("\nDatasets by Staleness: ")
 print_table(stale_ps_sorted)
 
+stale_ps_by_recency = sorted(stale_packages.iteritems(), 
+                        key=lambda (k,v): v['last_modified'])
+print("\n\nStale Datasets by Refresh-by Date: ")
+print_table(stale_ps_by_recency)
+
+
 coda = "Out of {} packages, only {} have specified publication frequencies. {} are stale (past their refresh-by date), according to the metadata_modified field.".format(len(packages),packages_with_frequencies,stale_count)
 print(textwrap.fill(coda,70))
