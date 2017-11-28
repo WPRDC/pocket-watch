@@ -13,6 +13,19 @@ import os, json, requests, textwrap
 from datetime import datetime, timedelta
 from pprint import pprint
 
+def get_archive_path():
+    # Change path to script's path for cron job.
+    abspath = os.path.abspath(__file__)
+    dname = os.path.dirname(abspath)
+    os.chdir(dname)
+    last_scan_file = dname+'/last_scan.json'
+    return last_scan_file
+
+def store_as_json(output):
+    last_scan_file = get_archive_path()
+    with open(last_scan_file, 'w') as f:
+        json.dump(output, f, ensure_ascii=True, indent = 4)
+
 def print_table(stale_ps_sorted):
     template = "{{:<33.33}}  {}  {{:<10.10}}  {{:<12.12}}"
     fmt = template.format("{:>16.20}")
@@ -110,19 +123,11 @@ print_table(stale_ps_by_recency)
 coda = "Out of {} packages, only {} have specified publication frequencies. {} are stale (past their refresh-by date), according to the metadata_modified field.".format(len(packages),packages_with_frequencies,stale_count)
 print(textwrap.fill(coda,70))
 
-# store list of stale packages in a json file as a record of the last 
+# Store list of stale packages in a json file as a record of the last 
 # glance (with the intent of sending notifications whenever new ones show up).
 output = []
 for sp in stale_ps_by_recency:
     r = {'id': sp[0], 'title': sp[1]['title']}
     output.append(r)
 
-# change path to script's path for cron job
-abspath = os.path.abspath(__file__)
-dname = os.path.dirname(abspath)
-os.chdir(dname)
-last_scan_file = dname+'/last_scan.json'
-with open(last_scan_file, 'w') as f:
-    json.dump(output, f, ensure_ascii=true, indent = 4)
-
-###############
+store_as_json(output)
