@@ -107,24 +107,22 @@ print("\n\nStale Datasets by Refresh-by Date: ")
 print_table(stale_ps_by_recency)
 
 
-# Store list of stale packages in a JSON file as a record of the last 
+coda = "Out of {} packages, only {} have specified publication frequencies. {} are stale (past their refresh-by date), according to the metadata_modified field.".format(len(packages),packages_with_frequencies,stale_count)
+print(textwrap.fill(coda,70))
+
+# store list of stale packages in a json file as a record of the last 
 # glance (with the intent of sending notifications whenever new ones show up).
 output = []
 for sp in stale_ps_by_recency:
     r = {'id': sp[0], 'title': sp[1]['title']}
     output.append(r)
 
-# Change path to script's path for cron job
+# change path to script's path for cron job
 abspath = os.path.abspath(__file__)
 dname = os.path.dirname(abspath)
 os.chdir(dname)
 last_scan_file = dname+'/last_scan.json'
 with open(last_scan_file, 'w') as f:
-    json.dump(output, f, ensure_ascii=True, indent = 4)
+    json.dump(output, f, ensure_ascii=true, indent = 4)
 
 ###############
-
-coda = "Out of {} packages, only {} have specified publication frequencies. {} are stale (past their refresh-by date), according to the metadata_modified field.".format(len(packages),packages_with_frequencies,stale_count)
-print(textwrap.fill(coda,70))
-
-
