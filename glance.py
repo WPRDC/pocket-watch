@@ -26,6 +26,11 @@ def store_as_json(output):
     with open(last_scan_file, 'w') as f:
         json.dump(output, f, ensure_ascii=True, indent = 4)
 
+def load_from_json():
+    last_scan_file = get_archive_path()
+    with open(last_scan_file, 'r') as f:
+        return json.load(f)
+
 def print_table(stale_ps_sorted):
     template = "{{:<33.33}}  {}  {{:<10.10}}  {{:<12.12}}"
     fmt = template.format("{:>16.20}")
@@ -125,9 +130,18 @@ print(textwrap.fill(coda,70))
 
 # Store list of stale packages in a json file as a record of the last 
 # glance (with the intent of sending notifications whenever new ones show up).
-output = []
+currently_stale = []
+
+previously_stale = load_from_json()
+previously_stale_ids = [x['id'] for x in previously_stale]
+newly_stale = []
 for sp in stale_ps_by_recency:
     r = {'id': sp[0], 'title': sp[1]['title']}
-    output.append(r)
+    currently_stale.append(r)
+    
+    if sp[0] not in previously_stale_ids:
+        newly_stale.append(sp)
 
-store_as_json(output)
+print("NEWLY STALE: {}".format([sp[1]['title'] for sp in newly_stale]))
+
+store_as_json(currently_stale)
