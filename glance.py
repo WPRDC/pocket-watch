@@ -8,7 +8,7 @@
 # recently modified resource with the nominal publication frequency
 # and the current date.
 
-import json, requests, textwrap
+import os, json, requests, textwrap
 
 from datetime import datetime, timedelta
 from pprint import pprint
@@ -114,7 +114,12 @@ for sp in stale_ps_by_recency:
     r = {'id': sp[0], 'title': sp[1]['title']}
     output.append(r)
 
-with open('last_scan.json', 'w') as f:
+# Change path to script's path for cron job
+abspath = os.path.abspath(__file__)
+dname = os.path.dirname(abspath)
+os.chdir(dname)
+last_scan_file = dname+'/last_scan.json'
+with open(last_scan_file, 'w') as f:
     json.dump(output, f, ensure_ascii=True, indent = 4)
 
 ###############
