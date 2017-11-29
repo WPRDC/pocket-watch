@@ -155,8 +155,9 @@ for sp in stale_ps_by_recency:
     if sp[0] not in previously_stale_ids:
         newly_stale.append(sp)
 
-msg = "NEWLY STALE: {}".format([sp[1]['title'] for sp in newly_stale])
-print(msg)
-send_to_slack(msg,username='pocket watch',channel='@david',icon=':illuminati:')
+if len(newly_stale) > 0:
+    msg = "NEWLY STALE: {}".format([sp[1]['title'] for sp in newly_stale])
+    print(msg)
+    send_to_slack(msg,username='pocket watch',channel='@david',icon=':illuminati:')
 
 store_as_json(currently_stale)
