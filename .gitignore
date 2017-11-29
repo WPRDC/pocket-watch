@@ -1,3 +1,5 @@
+*.swp
+*.pyc
 TODO
 last_scan.json
 parameters/

@@ -8,10 +8,23 @@
 # recently modified resource with the nominal publication frequency
 # and the current date.
 
+# However, since changes to a resource's 'last_modified' timestamp
+# seem to ripple upward, changing the timestamp of the package's
+# 'metadata_modified' field, looking at 'last_modified' timestamps
+# only seems necessary when multiple resources in a package need
+# to be monitored to make sure they are all being updated.
+# This could be done either by tagging those resources 
+# (e.g., with "updates_hourly") or by hard-coding resource IDs
+# that need to be tracked.
+
+# [ ] Implement "updates_monthly" tracking of liens resources.
+
 import os, json, requests, textwrap
 
 from datetime import datetime, timedelta
 from pprint import pprint
+
+from notify import send_to_slack
 
 def get_archive_path():
     # Change path to script's path for cron job.
@@ -142,6 +155,8 @@ for sp in stale_ps_by_recency:
     if sp[0] not in previously_stale_ids:
         newly_stale.append(sp)
 
-print("NEWLY STALE: {}".format([sp[1]['title'] for sp in newly_stale]))
+msg = "NEWLY STALE: {}".format([sp[1]['title'] for sp in newly_stale])
+print(msg)
+send_to_slack(msg,username='pocket watch',channel='@david',icon=':illuminati:')
 
 store_as_json(currently_stale)
