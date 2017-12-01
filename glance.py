@@ -44,22 +44,30 @@ def load_from_json():
     with open(last_scan_file, 'r') as f:
         return json.load(f)
 
-def print_table(stale_ps_sorted):
-    template = "{{:<33.33}}  {}  {{:<10.10}}  {{:<12.12}}"
-    fmt = template.format("{:>16.20}")
-    #print(fmt.format("Title","Normalized lateness",
-    #                "metadata_modified","publishing frequency"))
+def get_terminal_size():
+    rows, columns = os.popen('stty size', 'r').read().split()
+    return int(rows), int(columns)
 
-    print(fmt.format("","", "metadata_","publishing"))
-    print(fmt.format("Title","Cycles late", "modified","frequency"))
-    print("=========================================================================")
-    #fmt = "{:<33.33} {:<20.3f} {:<10.10} {:<12.12}"
-    fmt = template.format("{:>16.3f}")
+def print_table(stale_ps_sorted):
+    rows, columns = get_terminal_size()
+
+    template = "{{:<30.30}}  {}  {{:<10.10}}  {{:<12.12}}"
+    if columns > 100:
+        template += " {{:<23.23}}"
+    fmt = template.format("{:>10.14}")
+
+    print(fmt.format("","Cycles", "metadata_","publishing","Publisher"))
+    print(fmt.format("Title","late", "modified","frequency",""))
+    used_columns = columns #30+2+10+2+10+2+12+23
+    print("="*used_columns)
+    fmt = template.format("{:>10.2f}")
     for k,v in stale_ps_sorted:
         last_modified_date = datetime.strftime(v['last_modified'], "%Y-%m-%d")
-        print(fmt.format(v['title'],v['cycles_late'],
-            last_modified_date,v['publishing_frequency']))
-    print("=========================================================================\n")
+        fields = [v['title'],v['cycles_late'],
+            last_modified_date,v['publishing_frequency'],v['publisher']]
+            
+        print(fmt.format(*fields))
+    print("{}\n".format("="*columns))
 
 
 host = "data.wprdc.org"
@@ -96,7 +104,8 @@ for i,package in enumerate(packages):
         metadata_modified = datetime.strptime(package['metadata_modified'],"%Y-%m-%dT%H:%M:%S.%f")
         publishing_frequency = package['frequency_publishing']
         data_change_rate = package['frequency_data_change']
-        
+        publisher = package['organization']['title']
+
         if publishing_frequency in period:
             publishing_period = period[publishing_frequency]
         else:
@@ -116,6 +125,7 @@ for i,package in enumerate(packages):
                                             publishing_period.total_seconds(),
                         'publishing_frequency': publishing_frequency,
                         'data_change_rate': data_change_rate,
+                        'publisher': publisher,
                         'json_index': i,
                         'title': title,
                         }
