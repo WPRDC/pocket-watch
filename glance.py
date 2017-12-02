@@ -52,14 +52,20 @@ def print_table(stale_ps_sorted):
     rows, columns = get_terminal_size()
 
     template = "{{:<30.30}}  {}  {{:<10.10}}  {{:<12.12}}"
-    if columns > 100:
-        template += " {{:<23.23}}"
     fmt = template.format("{:>10.14}")
+    used_columns = len(fmt.format("aardvark","bumblebee",
+        "chupacabra","dragon","electric eel","flying rod"))
 
-    print(fmt.format("","Cycles", "metadata_","publishing","Publisher"))
-    print(fmt.format("Title","late", "modified","frequency",""))
-    used_columns = columns #30+2+10+2+10+2+12+23
-    print("="*used_columns)
+    publisher_length = 23
+    if columns > used_columns + publisher_length:
+        template += " {{" + ":<{}.{}".format(publisher_length,publisher_length) + "}}"
+        fmt = template.format("{:>10.14}")
+        used_columns = len(fmt.format("aardvark","bumblebee",
+            "chupacabra","dragon","electric eel","flying rod"))
+    border = "{}".format("="*used_columns)
+    print(fmt.format("","Cycles", "metadata_","publishing",""))
+    print(fmt.format("Title","late", "modified","frequency","Publisher"))
+    print(border)
     fmt = template.format("{:>10.2f}")
     for k,v in stale_ps_sorted:
         last_modified_date = datetime.strftime(v['last_modified'], "%Y-%m-%d")
@@ -67,7 +73,7 @@ def print_table(stale_ps_sorted):
             last_modified_date,v['publishing_frequency'],v['publisher']]
             
         print(fmt.format(*fields))
-    print("{}\n".format("="*columns))
+    print("{}\n".format(border)
 
 
 host = "data.wprdc.org"
