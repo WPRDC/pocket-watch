@@ -73,7 +73,7 @@ def print_table(stale_ps_sorted):
             last_modified_date,v['publishing_frequency'],v['publisher']]
             
         print(fmt.format(*fields))
-    print("{}\n".format(border)
+    print("{}\n".format(border))
 
 
 host = "data.wprdc.org"
