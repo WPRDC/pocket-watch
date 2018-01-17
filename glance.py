@@ -174,6 +174,6 @@ for sp in stale_ps_by_recency:
 if len(newly_stale) > 0:
     msg = "NEWLY STALE: {}".format([sp[1]['title'] for sp in newly_stale])
     print(msg)
-    send_to_slack(msg,username='pocket watch',channel='@david',icon=':illuminati:')
+    send_to_slack(msg,username='pocket watch',channel='#stale-datasets',icon=':illuminati:')
 
 store_as_json(currently_stale)
