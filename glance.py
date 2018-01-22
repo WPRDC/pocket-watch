@@ -98,6 +98,24 @@ period = {'Annually': timedelta(days = 366),
         'Hourly': timedelta(hours = 1),
         'Multiple Times per Hour': timedelta(minutes=30)}
 
+
+# Some datasets are showing up as stale for one day because
+# (for instance) the County doesn't post jail census data
+# on a given day to their FTP server; our ETL script runs
+# but it doesn't update the metadata_modified.
+
+# One better solution to this would be to create a package-
+# (and maybe also resource-) level metadata field called
+# etl_job_last_ran. 
+
+# For now, I'm hard-coding in a few exceptions.
+extensions = {'d15ca172-66df-4508-8562-5ec54498cfd4': {'title': 'Allegheny County Jail Daily Census',
+                'extra_time': timedelta(days=1),
+                'actual_data_source_reserve': timedelta(days=15)},
+              '046e5b6a-0f90-4f8e-8c16-14057fd8872e': {'title': 'Police Incident Blotter (30 Day)',
+                'extra_time': timedelta(days=1)}
+            }
+
 nonperiods = ['', 'As Needed', 'Not Updated (Historical Only)']
 
 packages_with_frequencies = 0
@@ -122,6 +140,10 @@ for i,package in enumerate(packages):
 
         if publishing_period is not None:
             lateness = datetime.now() - (metadata_modified + publishing_period)
+            if package_id in extensions.keys():
+                if lateness.total_seconds() > 0 and lateness.total_seconds() < extensions[package_id]['extra_time']:
+                    print("{} is technically stale ({} cycles late), but we're giving it a pass because either there may not have been any new data to upsert or the next day's ETL job should fill in the gap.".format(title,lateness.total_seconds()/publishing_period.total_seconds()))
+                lateness -= extensions[package_id]['extra_time']
             if lateness.total_seconds() > 0:
                 if data_change_rate not in nonperiods:
                     output = "{}) {} | metadata_modified = {}, but updates {}, making it STALE!".format(i,title,metadata_modified,package['frequency_publishing'])
