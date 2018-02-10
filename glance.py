@@ -57,24 +57,55 @@ def print_table(stale_ps_sorted):
         "chupacabra","dragon","electric eel","flying rod"))
 
     publisher_length = 23
-    if columns > used_columns + publisher_length:
-        template += " {{" + ":<{}.{}".format(publisher_length,publisher_length) + "}}"
+    if columns > used_columns + publisher_length + len("harvested"):
+        template += " {{" + ":<{}.{}".format(publisher_length,publisher_length) + "}}" + " {{:<9.9}}"
         fmt = template.format("{:>10.14}")
         used_columns = len(fmt.format("aardvark","bumblebee",
-            "chupacabra","dragon","electric eel","flying rod"))
+            "chupacabra","dragon","electric eel","flying rod",
+            "gorilla"))
     border = "{}".format("="*used_columns)
-    print(fmt.format("","Cycles", "metadata_","publishing",""))
-    print(fmt.format("Title","late", "modified","frequency","Publisher"))
+    print(fmt.format("","Cycles", "metadata_","publishing","","Upload"))
+    print(fmt.format("Title","late", "modified","frequency","Publisher","Method"))
     print(border)
     fmt = template.format("{:>10.2f}")
     for k,v in stale_ps_sorted:
         last_modified_date = datetime.strftime(v['last_modified'], "%Y-%m-%d")
         fields = [v['title'],v['cycles_late'],
-            last_modified_date,v['publishing_frequency'],v['publisher']]
+            last_modified_date,v['publishing_frequency'],v['publisher'],v['upload_method']]
             
         print(fmt.format(*fields))
     print("{}\n".format(border))
 
+def infer_upload_method(package):
+    """This function tries to figure out what upload method 
+    is involved in publishing data to this package. Since
+    the _etl tag is a package-level tag, for the purposes
+    of pocket-watch, this is a pretty good way of 
+    determining which upload method is involved in a package 
+    becoming stale.
+
+    Most of this code was borrowed from dataset-tracker."""
+    tag_dicts = package['tags']
+    tags = [td['name'] for td in tag_dicts]
+    if '_etl' in tags:
+        # This is the package-level tag, so not every resource inside will be ETLed.
+        # For the Air Quality dataset, Excel, CSV, and PDF files all seem to be ETLed.
+        # Let's exclude data dictionaries:
+        #if re.search('data dictionary',resource_name,re.IGNORECASE) is not None or resource['format'] in ['HTML','html']:
+        #    loading_method = 'manual'
+        #else:
+        #    loading_method = 'etl'
+        loading_method = 'etl'
+    elif '_harvested' in tags:
+        loading_method = 'harvested'
+    else:
+        r_names = [r['name'] if 'name' in r else 'Unnamed resource' for r in package['resources']]
+        if 'Esri Rest API' in r_names:
+            loading_method = 'harvested'
+        else:
+            loading_method = 'manual' 
+            # This package is probably all manually uploaded data.
+    return loading_method
 
 host = "data.wprdc.org"
 url = "https://{}/api/3/action/current_package_list_with_resources?limit=999999".format(host)
@@ -156,6 +187,7 @@ for i,package in enumerate(packages):
                         'publisher': publisher,
                         'json_index': i,
                         'title': title,
+                        'upload_method': infer_upload_method(package)
                         }
                     stale_count += 1
                 else:
