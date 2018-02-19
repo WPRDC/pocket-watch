@@ -48,6 +48,11 @@ def get_terminal_size():
     rows, columns = os.popen('stty size', 'r').read().split()
     return int(rows), int(columns)
 
+def pluralize(word,xs,count=None):
+    if xs is not None:
+        count = len(xs)
+    return "{} {}{}".format(count,word,'' if count == 1 else 's')
+
 def print_table(stale_ps_sorted):
     rows, columns = get_terminal_size()
 
