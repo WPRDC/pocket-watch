@@ -48,10 +48,16 @@ def get_terminal_size():
     rows, columns = os.popen('stty size', 'r').read().split()
     return int(rows), int(columns)
 
-def pluralize(word,xs,count=None):
+def pluralize(word,xs,return_count=True,count=None):
+    # This version of the pluralize function has been modified
+    # to support returning or not returning the count 
+    # as part of the conditionally pluralized noun.
     if xs is not None:
         count = len(xs)
-    return "{} {}{}".format(count,word,'' if count == 1 else 's')
+    if return_count:
+        return "{} {}{}".format(count,word,'' if count == 1 else 's')
+    else:
+        return "{}{}".format(word,'' if count == 1 else 's')
 
 def print_table(stale_ps_sorted):
     rows, columns = get_terminal_size()
