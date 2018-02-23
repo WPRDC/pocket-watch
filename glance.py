@@ -118,6 +118,7 @@ def infer_upload_method(package):
             # This package is probably all manually uploaded data.
     return loading_method
 
+
 host = "data.wprdc.org"
 url = "https://{}/api/3/action/current_package_list_with_resources?limit=999999".format(host)
 r = requests.get(url)
@@ -167,6 +168,7 @@ for i,package in enumerate(packages):
     if 'frequency_publishing' in package.keys():
         title = package['title']
         package_id = package['id']
+        dataset_url = "https://data.wprdc.org/dataset/{}".format(package['name'])
         metadata_modified = datetime.strptime(package['metadata_modified'],"%Y-%m-%dT%H:%M:%S.%f")
         publishing_frequency = package['frequency_publishing']
         data_change_rate = package['frequency_data_change']
@@ -198,7 +200,8 @@ for i,package in enumerate(packages):
                         'publisher': publisher,
                         'json_index': i,
                         'title': title,
-                        'upload_method': infer_upload_method(package)
+                        'upload_method': infer_upload_method(package),
+                        'url': dataset_url
                         }
                     stale_count += 1
                 else:
@@ -222,7 +225,7 @@ print_table(stale_ps_by_recency)
 coda = "Out of {} packages, only {} have specified publication frequencies. {} are stale (past their refresh-by date), according to the metadata_modified field.".format(len(packages),packages_with_frequencies,stale_count)
 print(textwrap.fill(coda,70))
 
-# Store list of stale packages in a json file as a record of the last 
+# Store list of stale packages in a JSON file as a record of the last
 # glance (with the intent of sending notifications whenever new ones show up).
 currently_stale = []
 
@@ -240,5 +243,27 @@ if len(newly_stale) > 0:
     msg = "NEWLY STALE: {}".format([sp[1]['title'] for sp in newly_stale])
     print(msg)
     send_to_slack(msg,username='pocket watch',channel='#stale-datasets',icon=':illuminati:')
+    other_notifications = [
+        {'publisher': 'Allegheny County', 'medium': 'Slack',
+        'channel': '#county-stale-datasets',
+        #'slack_id': 'wprdc-and-friends',
+        'slack_id': 'wprdc',
+        'slack-config': 'something'}
+        ]
+
+    for other in other_notifications:
+        if other['publisher'] in [sp[1]['publisher'] for sp in newly_stale]:
+            publisher_stale_sets = []
+            for sp in newly_stale:
+                if other['publisher'] == sp[1]['publisher']:
+                    publisher_stale_sets.append(sp)
+
+            publisher_stale_ones = ["<{}|{}>".format(sp[1]['url'],sp[1]['title']) for sp in publisher_stale_sets]
+            printable_publisher_stale_ones = [sp[1]['title'] for sp in publisher_stale_sets]
+            multiple = len(publisher_stale_ones) != 1
+            publisher_msg = "Hey there! I just noticed {} newly stale {}: {}".format(len(publisher_stale_ones),pluralize("dataset",publisher_stale_ones,False), ', '.join(publisher_stale_ones))
+            #send_to_different_slack: wprdc-and-friends
+            print(publisher_msg)
+            send_to_slack(publisher_msg,username='pocket watch',channel='#county-stale-datasets')
 
 store_as_json(currently_stale)
