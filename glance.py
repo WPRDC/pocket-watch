@@ -246,8 +246,7 @@ if len(newly_stale) > 0:
     other_notifications = [
         {'publisher': 'Allegheny County', 'medium': 'Slack',
         'channel': '#county-stale-datasets',
-        #'slack_id': 'wprdc-and-friends',
-        'slack_id': 'wprdc',
+        'slack_group': 'wprdc-and-friends',
         'slack-config': 'something'}
         ]
 
@@ -264,6 +263,8 @@ if len(newly_stale) > 0:
             publisher_msg = "Hey there! I just noticed {} newly stale {}: {}".format(len(publisher_stale_ones),pluralize("dataset",publisher_stale_ones,False), ', '.join(publisher_stale_ones))
             #send_to_different_slack: wprdc-and-friends
             print(publisher_msg)
-            send_to_slack(publisher_msg,username='pocket watch',channel='#county-stale-datasets')
+            send_to_slack(publisher_msg,username='pocket watch',channel='#county-stale-datasets',slack_group=other['slack_group'])
+            #send_to_slack(publisher_msg,username='pocket watch',channel='#boring-tests',slack_group=other['slack_group'])
+
 
 store_as_json(currently_stale)

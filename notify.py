@@ -1,6 +1,6 @@
-from parameters.remote_parameters import webhook_url
+from parameters.remote_parameters import webhook_url, webhook_by_group
 
-def send_to_slack(message,username=None,channel=None,icon=None):
+def send_to_slack(message,username=None,channel=None,icon=None,slack_group='wprdc'):
     """This script sends the given message to a particular channel on
     Slack, as configured by the webhook_url. Note that this shouldn't 
     be heavily used (e.g., for reporting every error a script 
@@ -25,6 +25,8 @@ def send_to_slack(message,username=None,channel=None,icon=None):
         slack_data['channel'] = channel
     if icon is not None:
         slack_data['icon_emoji'] = icon #':coffin:' #':tophat:' # ':satellite_antenna:'
+    if slack_group != 'wprdc':
+        webhook_url = webhook_by_group[slack_group]
     response = requests.post(
         webhook_url, data=json.dumps(slack_data),
         headers={'Content-Type': 'application/json'}
