@@ -39,4 +39,4 @@ def send_to_slack(message,username=None,channel=None,icon=None,slack_group='wprd
 
 if __name__ == '__main__':
     msg = "No sir, away! A papaya war is on!"
-    send_to_slack(msg)
+    send_to_slack(msg,username='notifybot',channel='@david')
