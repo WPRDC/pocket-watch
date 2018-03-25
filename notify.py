@@ -1,5 +1,3 @@
-from parameters.remote_parameters import webhook_url, webhook_by_group
-
 def send_to_slack(message,username=None,channel=None,icon=None,slack_group='wprdc'):
     """This script sends the given message to a particular channel on
     Slack, as configured by the webhook_url. Note that this shouldn't 
@@ -7,6 +5,7 @@ def send_to_slack(message,username=None,channel=None,icon=None,slack_group='wprd
     encounters) as API limits are a consideration. This script IS 
     suitable for running when a script-terminating exception is caught, 
     so that you can report the irregular termination of an ETL script."""
+    from parameters.remote_parameters import webhook_url, webhook_by_group
 
     import os, re, json, requests
     import socket
