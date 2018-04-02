@@ -211,13 +211,14 @@ for i,package in enumerate(packages):
 # Sort stale packages by relative tardiness so the most recently tardy ones 
 # appear at the bottom of the output and the most egregiously late ones
 # at the top.
-stale_ps_sorted = sorted(stale_packages.iteritems(), 
-                        key=lambda (k,v): -v['cycles_late'])
+#stale_ps_sorted = sorted(stale_packages.iteritems(), key=lambda(k,v): -v['cycles_late'])
+       #Note that in Python 3, key=lambda(k,v): v['position'] must be written as key=lambda k_v: k_v[1]['position']
+stale_ps_sorted = sorted(stale_packages.items(), key=lambda k_v: -k_v[1]['cycles_late'])
+
 print("\nDatasets by Staleness: ")
 print_table(stale_ps_sorted)
 
-stale_ps_by_recency = sorted(stale_packages.iteritems(), 
-                        key=lambda (k,v): v['last_modified'])
+stale_ps_by_recency = sorted(stale_packages.items(), key=lambda k_v: k_v[1]['last_modified'])
 print("\n\nStale Datasets by Refresh-by Date: ")
 print_table(stale_ps_by_recency)
 
