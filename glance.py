@@ -240,6 +240,10 @@ for sp in stale_ps_by_recency:
     if sp[0] not in previously_stale_ids:
         newly_stale.append(sp)
 
+wprdc_datasets = ['22fe57da-f5b8-4c52-90ea-b10591a66f90', # Liens
+        'f2141a79-c0b9-4cf9-b4d2-d591b4aaa8e6' # Foreclosures
+        ]
+
 if len(newly_stale) > 0:
     msg = "NEWLY STALE: {}".format([sp[1]['title'] for sp in newly_stale])
     print(msg)
@@ -255,7 +259,7 @@ if len(newly_stale) > 0:
         if other['publisher'] in [sp[1]['publisher'] for sp in newly_stale]:
             publisher_stale_sets = []
             for sp in newly_stale:
-                if other['publisher'] == sp[1]['publisher']:
+                if other['publisher'] == sp[1]['publisher'] and sp[0] not in wprdc_datasets:
                     publisher_stale_sets.append(sp)
 
             publisher_stale_ones = ["<{}|{}>".format(sp[1]['url'],sp[1]['title']) for sp in publisher_stale_sets]
