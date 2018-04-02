@@ -19,7 +19,7 @@
 
 # [ ] Implement "updates_monthly" tracking of liens resources.
 
-import os, json, requests, textwrap
+import os, sys, json, requests, textwrap
 
 from datetime import datetime, timedelta
 from pprint import pprint
@@ -60,32 +60,34 @@ def pluralize(word,xs,return_count=True,count=None):
         return "{}{}".format(word,'' if count == 1 else 's')
 
 def print_table(stale_ps_sorted):
-    rows, columns = get_terminal_size()
+    if sys.stdout.isatty():
+        #Running from command line
+        rows, columns = get_terminal_size()
 
-    template = "{{:<30.30}}  {}  {{:<10.10}}  {{:<12.12}}"
-    fmt = template.format("{:>10.14}")
-    used_columns = len(fmt.format("aardvark","bumblebee",
-        "chupacabra","dragon","electric eel","flying rod"))
-
-    publisher_length = 23
-    if columns > used_columns + publisher_length + len("harvested"):
-        template += " {{" + ":<{}.{}".format(publisher_length,publisher_length) + "}}" + " {{:<9.9}}"
+        template = "{{:<30.30}}  {}  {{:<10.10}}  {{:<12.12}}"
         fmt = template.format("{:>10.14}")
         used_columns = len(fmt.format("aardvark","bumblebee",
-            "chupacabra","dragon","electric eel","flying rod",
-            "gorilla"))
-    border = "{}".format("="*used_columns)
-    print(fmt.format("","Cycles", "metadata_","publishing","","Upload"))
-    print(fmt.format("Title","late", "modified","frequency","Publisher","Method"))
-    print(border)
-    fmt = template.format("{:>10.2f}")
-    for k,v in stale_ps_sorted:
-        last_modified_date = datetime.strftime(v['last_modified'], "%Y-%m-%d")
-        fields = [v['title'],v['cycles_late'],
-            last_modified_date,v['publishing_frequency'],v['publisher'],v['upload_method']]
-            
-        print(fmt.format(*fields))
-    print("{}\n".format(border))
+            "chupacabra","dragon","electric eel","flying rod"))
+
+        publisher_length = 23
+        if columns > used_columns + publisher_length + len("harvested"):
+            template += " {{" + ":<{}.{}".format(publisher_length,publisher_length) + "}}" + " {{:<9.9}}"
+            fmt = template.format("{:>10.14}")
+            used_columns = len(fmt.format("aardvark","bumblebee",
+                "chupacabra","dragon","electric eel","flying rod",
+                "gorilla"))
+        border = "{}".format("="*used_columns)
+        print(fmt.format("","Cycles", "metadata_","publishing","","Upload"))
+        print(fmt.format("Title","late", "modified","frequency","Publisher","Method"))
+        print(border)
+        fmt = template.format("{:>10.2f}")
+        for k,v in stale_ps_sorted:
+            last_modified_date = datetime.strftime(v['last_modified'], "%Y-%m-%d")
+            fields = [v['title'],v['cycles_late'],
+                last_modified_date,v['publishing_frequency'],v['publisher'],v['upload_method']]
+                
+            print(fmt.format(*fields))
+        print("{}\n".format(border))
 
 def infer_upload_method(package):
     """This function tries to figure out what upload method 
