@@ -121,6 +121,8 @@ def infer_upload_method(package):
     return loading_method
 
 
+mute_alerts = True 
+
 host = "data.wprdc.org"
 url = "https://{}/api/3/action/current_package_list_with_resources?limit=999999".format(host)
 r = requests.get(url)
@@ -249,29 +251,31 @@ wprdc_datasets = ['22fe57da-f5b8-4c52-90ea-b10591a66f90', # Liens
 if len(newly_stale) > 0:
     msg = "NEWLY STALE: {}".format([sp[1]['title'] for sp in newly_stale])
     print(msg)
-    send_to_slack(msg,username='pocket watch',channel='#stale-datasets',icon=':illuminati:')
-    other_notifications = [
-        {'publisher': 'Allegheny County', 'medium': 'Slack',
-        'channel': '#county-stale-datasets',
-        'slack_group': 'wprdc-and-friends',
-        'slack-config': 'something'}
-        ]
+    if not mute_alerts:
+        send_to_slack(msg,username='pocket watch',channel='#stale-datasets',icon=':illuminati:')
+        other_notifications = [
+            {'publisher': 'Allegheny County', 'medium': 'Slack',
+            'channel': '#county-stale-datasets',
+            'slack_group': 'wprdc-and-friends',
+            'slack-config': 'something'}
+            ]
 
-    for other in other_notifications:
-        if other['publisher'] in [sp[1]['publisher'] for sp in newly_stale]:
-            publisher_stale_sets = []
-            for sp in newly_stale:
-                if other['publisher'] == sp[1]['publisher'] and sp[0] not in wprdc_datasets:
-                    publisher_stale_sets.append(sp)
+        for other in other_notifications:
+            if other['publisher'] in [sp[1]['publisher'] for sp in newly_stale]:
+                publisher_stale_sets = []
+                for sp in newly_stale:
+                    if other['publisher'] == sp[1]['publisher'] and sp[0] not in wprdc_datasets:
+                        publisher_stale_sets.append(sp)
 
-            publisher_stale_ones = ["<{}|{}>".format(sp[1]['url'],sp[1]['title']) for sp in publisher_stale_sets]
-            printable_publisher_stale_ones = [sp[1]['title'] for sp in publisher_stale_sets]
-            multiple = len(publisher_stale_ones) != 1
-            publisher_msg = "Hey there! I just noticed {} newly stale {}: {}".format(len(publisher_stale_ones),pluralize("dataset",publisher_stale_ones,False), ', '.join(publisher_stale_ones))
-            #send_to_different_slack: wprdc-and-friends
-            print(publisher_msg)
-            send_to_slack(publisher_msg,username='pocket watch',channel='#county-stale-datasets',slack_group=other['slack_group'])
-            #send_to_slack(publisher_msg,username='pocket watch',channel='#boring-tests',slack_group=other['slack_group'])
+                publisher_stale_ones = ["<{}|{}>".format(sp[1]['url'],sp[1]['title']) for sp in publisher_stale_sets]
+                if len(publisher_stale_ones) > 0:
+                    printable_publisher_stale_ones = [sp[1]['title'] for sp in publisher_stale_sets]
+                    multiple = len(publisher_stale_ones) != 1
+                    publisher_msg = "Hey there! I just noticed {} newly stale {}: {}".format(len(publisher_stale_ones),pluralize("dataset",publisher_stale_ones,False), ', '.join(publisher_stale_ones))
+                    #send_to_different_slack: wprdc-and-friends
+                    print(publisher_msg)
+                    send_to_slack(publisher_msg,username='pocket watch',channel='#county-stale-datasets',slack_group=other['slack_group'])
+                    #send_to_slack(publisher_msg,username='pocket watch',channel='#boring-tests',slack_group=other['slack_group'])
 
 
 store_as_json(currently_stale)
