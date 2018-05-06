@@ -79,3 +79,8 @@ Out of 263 packages, only 150 have specified publication frequencies.
 20 are stale (past their refresh-by date), according to the
 metadata_modified field.
 ```
+
+To install as a cron job that triggers alerts, specify the `mute_alerts` value as a command-line parameter:
+```
+> python glance.py False
+```
