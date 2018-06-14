@@ -275,6 +275,8 @@ def main(mute_alerts = True):
                         print(publisher_msg)
                         send_to_slack(publisher_msg,username='pocket watch',channel='#county-stale-datasets',slack_group=other['slack_group'])
                         #send_to_slack(publisher_msg,username='pocket watch',channel='#boring-tests',slack_group=other['slack_group'])
+        else:
+            print("[Slack alerts are muted.]")
 
 
     store_as_json(currently_stale)
@@ -283,4 +285,10 @@ if __name__ == '__main__':
     if len(sys.argv) == 1:
         main()
     else:
-        main(mute_alerts = bool(sys.argv[1]))
+        if sys.argv[1] == 'True':
+            mute_alerts = True
+        elif sys.argv[1] == 'False':
+            mute_alerts = False
+        else:
+            raise ValueError("{} is neither True nor False. It should be a boolean that sets the mute_alerts variable.".format(sys.argv[1]))
+        main(mute_alerts = mute_alerts)
