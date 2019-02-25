@@ -19,7 +19,7 @@
 
 # [ ] Implement "updates_monthly" tracking of liens resources.
 
-import os, sys, json, requests, textwrap
+import os, sys, json, requests, textwrap, traceback
 
 from datetime import datetime, timedelta
 from pprint import pprint
@@ -281,14 +281,24 @@ def main(mute_alerts = True):
 
     store_as_json(currently_stale)
 
-if __name__ == '__main__':
-    if len(sys.argv) == 1:
-        main()
-    else:
-        if sys.argv[1] == 'True':
-            mute_alerts = True
-        elif sys.argv[1] == 'False':
-            mute_alerts = False
+try:
+    if __name__ == '__main__':
+        if len(sys.argv) == 1:
+            main()
         else:
-            raise ValueError("{} is neither True nor False. It should be a boolean that sets the mute_alerts variable.".format(sys.argv[1]))
-        main(mute_alerts = mute_alerts)
+            if sys.argv[1] == 'True':
+                mute_alerts = True
+            elif sys.argv[1] == 'False':
+                mute_alerts = False
+            else:
+                raise ValueError("{} is neither True nor False. It should be a boolean that sets the mute_alerts variable.".format(sys.argv[1]))
+            main(mute_alerts = mute_alerts)
+except:
+    e = sys.exc_info()[0]
+    msg = "Error: {} : \n".format(e)
+    exc_type, exc_value, exc_traceback = sys.exc_info()
+    lines = traceback.format_exception(exc_type, exc_value, exc_traceback)
+    msg = ''.join('!! ' + line for line in lines)
+    msg = "pocket_watch/glance.py failed for some reason.\n" + msg
+    print(msg) # Log it or whatever here
+    send_to_slack(msg,username='pocket watch',channel='@david',icon=':illuminati:')
