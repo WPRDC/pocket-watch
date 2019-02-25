@@ -188,7 +188,7 @@ def main(mute_alerts = True):
             if publishing_period is not None:
                 lateness = datetime.now() - (metadata_modified + publishing_period)
                 if package_id in extensions.keys():
-                    if lateness.total_seconds() > 0 and lateness.total_seconds() < extensions[package_id]['extra_time']:
+                    if lateness.total_seconds() > 0 and lateness.total_seconds() < extensions[package_id]['extra_time'].total_seconds():
                         print("{} is technically stale ({} cycles late), but we're giving it a pass because either there may not have been any new data to upsert or the next day's ETL job should fill in the gap.".format(title,lateness.total_seconds()/publishing_period.total_seconds()))
                     lateness -= extensions[package_id]['extra_time']
                 if lateness.total_seconds() > 0:
