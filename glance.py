@@ -2,9 +2,9 @@
 # and finds the datasets that have not been updated on their
 # self-identified schedule.
 
-# Note that each resource has a 'last_modified' timestamp, which 
+# Note that each resource has a 'last_modified' timestamp, which
 # could also be examined to study staleness. The alternate approach
-# would be to compare the 'last_modified' timestamp of the most 
+# would be to compare the 'last_modified' timestamp of the most
 # recently modified resource with the nominal publication frequency
 # and the current date.
 
@@ -13,7 +13,13 @@
 # 'metadata_modified' field, looking at 'last_modified' timestamps
 # only seems necessary when multiple resources in a package need
 # to be monitored to make sure they are all being updated.
-# This could be done either by tagging those resources 
+# (This is not true. metadata_modified is being explicitly changed
+# by the ETL framework. For that matter, the effect of ETL jobs need
+# not even show up in the last_modified field of altered resources.
+# I'm pretty sure it's the job of the ETL framework to make those change
+# as well.)
+
+# This could be done either by tagging those resources
 # (e.g., with "updates_hourly") or by hard-coding resource IDs
 # that need to be tracked.
 
@@ -50,7 +56,7 @@ def get_terminal_size():
 
 def pluralize(word,xs,return_count=True,count=None):
     # This version of the pluralize function has been modified
-    # to support returning or not returning the count 
+    # to support returning or not returning the count
     # as part of the conditionally pluralized noun.
     if xs is not None:
         count = len(xs)
@@ -85,16 +91,16 @@ def print_table(stale_ps_sorted):
             last_modified_date = datetime.strftime(v['last_modified'], "%Y-%m-%d")
             fields = [v['title'],v['cycles_late'],
                 last_modified_date,v['publishing_frequency'],v['publisher'],v['upload_method']]
-                
+
             print(fmt.format(*fields))
         print("{}\n".format(border))
 
 def infer_upload_method(package):
-    """This function tries to figure out what upload method 
+    """This function tries to figure out what upload method
     is involved in publishing data to this package. Since
     the _etl tag is a package-level tag, for the purposes
-    of pocket-watch, this is a pretty good way of 
-    determining which upload method is involved in a package 
+    of pocket-watch, this is a pretty good way of
+    determining which upload method is involved in a package
     becoming stale.
 
     Most of this code was borrowed from dataset-tracker."""
@@ -116,7 +122,7 @@ def infer_upload_method(package):
         if 'Esri Rest API' in r_names:
             loading_method = 'harvested'
         else:
-            loading_method = 'manual' 
+            loading_method = 'manual'
             # This package is probably all manually uploaded data.
     return loading_method
 
@@ -152,7 +158,7 @@ def main(mute_alerts = True):
 
     # One better solution to this would be to create a package-
     # (and maybe also resource-) level metadata field called
-    # etl_job_last_ran. 
+    # etl_job_last_ran.
 
     # For now, I'm hard-coding in a few exceptions.
     extensions = {'d15ca172-66df-4508-8562-5ec54498cfd4': {'title': 'Allegheny County Jail Daily Census',
@@ -176,7 +182,6 @@ def main(mute_alerts = True):
             publishing_frequency = package['frequency_publishing']
             data_change_rate = package['frequency_data_change']
             publisher = package['organization']['title']
-
             if publishing_frequency in period:
                 publishing_period = period[publishing_frequency]
             else:
@@ -239,7 +244,7 @@ def main(mute_alerts = True):
     for sp in stale_ps_by_recency:
         r = {'id': sp[0], 'title': sp[1]['title']}
         currently_stale.append(r)
-        
+
         if sp[0] not in previously_stale_ids:
             newly_stale.append(sp)
 
