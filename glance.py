@@ -126,6 +126,25 @@ def infer_upload_method(package):
             # This package is probably all manually uploaded data.
     return loading_method
 
+def temporal_coverage_end(package):
+    if 'extras' in package:
+        extras_list = package['extras']
+        # The format is like this:
+        #       u'extras': [{u'key': u'dcat_issued', u'value': u'2014-01-07T15:27:45.000Z'}, ...
+        # not a dict, but a list of dicts.
+        extras = {d['key']: d['value'] for d in extras_list}
+        #if 'dcat_issued' not in extras:
+        if 'time_field' in extras:
+            # Then it is a package that has a temporal_coverage metadata field that is automatatically updated,
+            # and the end of this range can also be checked for lateness
+                parameter = "temporal_coverage"
+                temporal_coverage = get_package_parameter(site,package_id,parameter=parameter,API_key=API_key)
+                try:
+                    start_date, end_date = temporal_coverage.split('/')
+                except ValueError:
+                    end_date = None
+    return end_date
+
 
 def main(mute_alerts = True):
     host = "data.wprdc.org"
@@ -182,6 +201,9 @@ def main(mute_alerts = True):
             publishing_frequency = package['frequency_publishing']
             data_change_rate = package['frequency_data_change']
             publisher = package['organization']['title']
+
+            temporal_coverage_end_date = temporal_coverage_end(package) # Check for 'time_field' and auto-updated temporal_coverage field
+
             if publishing_frequency in period:
                 publishing_period = period[publishing_frequency]
             else:
