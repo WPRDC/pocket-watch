@@ -145,6 +145,14 @@ def temporal_coverage_end(package):
                     end_date = None
     return end_date
 
+def compute_lateness(extensions, package_id, publishing_period, metadata_modified):
+    lateness = datetime.now() - (metadata_modified + publishing_period)
+    if package_id in extensions.keys():
+        if lateness.total_seconds() > 0 and lateness.total_seconds() < extensions[package_id]['extra_time'].total_seconds():
+            print("{} is technically stale ({} cycles late), but we're giving it a pass because either there may not have been any new data to upsert or the next day's ETL job should fill in the gap.".format(title,lateness.total_seconds()/publishing_period.total_seconds()))
+        lateness -= extensions[package_id]['extra_time']
+    return lateness
+
 
 def main(mute_alerts = True):
     host = "data.wprdc.org"
@@ -213,11 +221,9 @@ def main(mute_alerts = True):
             #print("{} ({}) was last modified {} (according to its metadata). {}".format(title,package_id,metadata_modified,package['frequency_publishing']))
 
             if publishing_period is not None:
-                lateness = datetime.now() - (metadata_modified + publishing_period)
-                if package_id in extensions.keys():
-                    if lateness.total_seconds() > 0 and lateness.total_seconds() < extensions[package_id]['extra_time'].total_seconds():
-                        print("{} is technically stale ({} cycles late), but we're giving it a pass because either there may not have been any new data to upsert or the next day's ETL job should fill in the gap.".format(title,lateness.total_seconds()/publishing_period.total_seconds()))
-                    lateness -= extensions[package_id]['extra_time']
+                lateness = compute_lateness(extensions, package_id, publishing_period, metadata_modified)
+                #if temporal_coverage_end_date is not None:
+
                 if lateness.total_seconds() > 0:
                     output = "{}) {} | metadata_modified = {}, but updates {}, making it STALE!".format(i,title,metadata_modified,package['frequency_publishing'])
                     stale_packages[package_id] = {'output': output,
