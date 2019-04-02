@@ -241,6 +241,8 @@ def main(mute_alerts = True):
                     stale_count += 1
             packages_with_frequencies += 1
 
+
+
     # Sort stale packages by relative tardiness so the most recently tardy ones
     # appear at the bottom of the output and the most egregiously late ones
     # at the top.
@@ -311,6 +313,7 @@ def main(mute_alerts = True):
 
     store_as_json(currently_stale)
 
+from credentials import production
 try:
     if __name__ == '__main__':
         if len(sys.argv) == 1:
@@ -331,4 +334,5 @@ except:
     msg = ''.join('!! ' + line for line in lines)
     msg = "pocket_watch/glance.py failed for some reason.\n" + msg
     print(msg) # Log it or whatever here
-    send_to_slack(msg,username='pocket watch',channel='@david',icon=':illuminati:')
+    if production:
+        send_to_slack(msg,username='pocket watch',channel='@david',icon=':illuminati:')
