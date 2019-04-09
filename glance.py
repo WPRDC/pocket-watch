@@ -28,6 +28,7 @@
 import os, sys, json, requests, textwrap, traceback
 
 from datetime import datetime, timedelta
+from dateutil import parser
 from pprint import pprint
 
 from notify import send_to_slack
@@ -127,26 +128,32 @@ def infer_upload_method(package):
     return loading_method
 
 def temporal_coverage_end(package):
-    if 'extras' in package:
-        extras_list = package['extras']
-        # The format is like this:
-        #       u'extras': [{u'key': u'dcat_issued', u'value': u'2014-01-07T15:27:45.000Z'}, ...
-        # not a dict, but a list of dicts.
-        extras = {d['key']: d['value'] for d in extras_list}
-        #if 'dcat_issued' not in extras:
-        if 'time_field' in extras:
-            # Then it is a package that has a temporal_coverage metadata field that is automatatically updated,
-            # and the end of this range can also be checked for lateness
-                parameter = "temporal_coverage"
-                temporal_coverage = get_package_parameter(site,package_id,parameter=parameter,API_key=API_key)
-                try:
-                    start_date, end_date = temporal_coverage.split('/')
-                except ValueError:
-                    end_date = None
-    return end_date
+    """Returns a string representing the end date (or None)."""
+    if 'extras' not in package:
+        return None
+    extras_list = package['extras']
+    # The format is like this:
+    #       u'extras': [{u'key': u'dcat_issued', u'value': u'2014-01-07T15:27:45.000Z'}, ...
+    # not a dict, but a list of dicts.
+    extras = {d['key']: d['value'] for d in extras_list}
+    #if 'dcat_issued' not in extras:
+    if 'time_field' in extras:
+        # Then it is a package that has a temporal_coverage metadata field that is automatatically updated,
+        # and the end of this range can also be checked for lateness
+        parameter = "temporal_coverage"
+        if parameter in package:
+            temporal_coverage = package[parameter]
+        else:
+            temporal_coverage = None
+        try:
+            start_date, end_date = temporal_coverage.split('/')
+        except ValueError:
+            end_date = None
+        return end_date
+    return None
 
-def compute_lateness(extensions, package_id, publishing_period, metadata_modified):
-    lateness = datetime.now() - (metadata_modified + publishing_period)
+def compute_lateness(extensions, package_id, publishing_period, reference_dt):
+    lateness = datetime.now() - (reference_dt + publishing_period)
     if package_id in extensions.keys():
         if lateness.total_seconds() > 0 and lateness.total_seconds() < extensions[package_id]['extra_time'].total_seconds():
             print("{} is technically stale ({} cycles late), but we're giving it a pass because either there may not have been any new data to upsert or the next day's ETL job should fill in the gap.".format(title,lateness.total_seconds()/publishing_period.total_seconds()))
@@ -222,22 +229,50 @@ def main(mute_alerts = True):
 
             if publishing_period is not None:
                 lateness = compute_lateness(extensions, package_id, publishing_period, metadata_modified)
-                #if temporal_coverage_end_date is not None:
+                if temporal_coverage_end_date is not None:
+                    temporal_coverage_end_dt = datetime.strptime(temporal_coverage_end_date, "%Y-%m-%d") + timedelta(days=1) # [ ] This has no time zone associated with it.
+                    # [ ] Change this to use parser.parse to allow times to be included, but also think more carefully about adding that offset.
 
-                if lateness.total_seconds() > 0:
-                    output = "{}) {} | metadata_modified = {}, but updates {}, making it STALE!".format(i,title,metadata_modified,package['frequency_publishing'])
-                    stale_packages[package_id] = {'output': output,
-                        'last_modified': metadata_modified,
-                        'cycles_late': lateness.total_seconds()/
-                                            publishing_period.total_seconds(),
+                    data_lateness = compute_lateness(extensions, package_id, publishing_period, temporal_coverage_end_dt)
+                else:
+                    data_lateness = timedelta(seconds=0)
+
+
+                if lateness.total_seconds() > 0 or data_lateness.total_seconds() > 0: # Either kind of lateness triggers the listing of another stale package.
+                    stale_packages[package_id] = {
                         'publishing_frequency': publishing_frequency,
                         'data_change_rate': data_change_rate,
                         'publisher': publisher,
                         'json_index': i,
                         'title': title,
+                        'package_id': package_id,
                         'upload_method': infer_upload_method(package),
                         'url': dataset_url
                         }
+                    if lateness.total_seconds() > 0:
+                        stale_packages[package_id]['cycles_late'] = lateness.total_seconds()/publishing_period.total_seconds()
+                        stale_packages[package_id]['last_modified'] = metadata_modified
+                        stale_packages[package_id]['days_late'] = lateness.total_seconds()/(60.0*60*24)
+                    else:
+                        stale_packages[package_id]['cycles_late'] = 0
+                        stale_packages[package_id]['last_modified'] = metadata_modified
+                        stale_packages[package_id]['days_late'] = 0.0
+
+                    #if temporal_coverage_end_date is not None:
+                    if data_lateness.total_seconds() > 0:
+                        stale_packages[package_id]['temporal_coverage_end'] = temporal_coverage_end_date # This is a string.
+                        stale_packages[package_id]['data_cycles_late'] = data_lateness.total_seconds()/publishing_period.total_seconds()
+
+                    # Describe the evidence that the package is stale.
+                    output = "{}) {} updates {}".format(i,title,package['frequency_publishing'])
+                    if lateness.total_seconds() > 0 and data_lateness.total_seconds() > 0:
+                        output += " but metadata_modified = {} and temporal_coverage_end_date = {} making it DOUBLE STALE!".format(metadata_modified,temporal_coverage_end_date)
+                    elif lateness.total_seconds() > 0:
+                        output += " but metadata_modified = {} making it STALE!".format(metadata_modified)
+                    elif data_lateness.total_seconds() > 0:
+                        output += " but temporal_coverage_end_date = {} making it STALE!".format(temporal_coverage_end_date)
+                    stale_packages[package_id]['output'] = output
+
                     stale_count += 1
             packages_with_frequencies += 1
 
@@ -253,9 +288,14 @@ def main(mute_alerts = True):
     print("\nDatasets by Staleness: ")
     print_table(stale_ps_sorted)
 
-    stale_ps_by_recency = sorted(stale_packages.items(), key=lambda k_v: k_v[1]['last_modified'])
-    print("\n\nStale Datasets by Refresh-by Date: ")
+    stale_ps_by_recency = sorted(stale_packages.items(), key=lambda k_v: -k_v[1]['days_late'])
+    print("\n\nStale Datasets by Lateness: ")
     print_table(stale_ps_by_recency)
+
+    stale_ps_by_data_lateness = {p_id: sp for p_id,sp in stale_packages.items() if 'temporal_coverage_end' in sp}
+    stale_ps_by_data_lateness = sorted(stale_ps_by_data_lateness.items(), key=lambda k_v: -k_v[1]['data_cycles_late'])
+    print("\n\nStale Datasets by Data-Lateness: ")
+    print_table(stale_ps_by_data_lateness)
 
 
     coda = "Out of {} packages, only {} have specified publication frequencies. {} are stale (past their refresh-by date), according to the metadata_modified field.".format(len(packages),packages_with_frequencies,stale_count)
