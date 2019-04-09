@@ -70,7 +70,7 @@ def print_table(stale_ps_sorted):
         #Running from command line
         rows, columns = get_terminal_size()
 
-        template = "{{:<30.30}}  {}  {{:<10.10}}  {{:<12.12}}"
+        template = "{{:<40.40}}  {}  {{:<10.10}}  {{:<12.12}}"
         fmt = template.format("{:>10.14}")
         used_columns = len(fmt.format("aardvark","bumblebee",
             "chupacabra","dragon","electric eel","flying rod"))
