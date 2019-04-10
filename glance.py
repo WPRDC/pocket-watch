@@ -310,7 +310,7 @@ def main(mute_alerts = True):
     previously_stale_ids = [x['id'] for x in previously_stale]
     newly_stale = []
     for sp in stale_ps_by_recency:
-        r = {'id': sp[0], 'title': sp[1]['title'], 'package_url': sp[1]['package_url']}
+        r = {'id': sp[0], 'title': sp[1]['title']}
         currently_stale.append(r)
 
         if sp[0] not in previously_stale_ids:
