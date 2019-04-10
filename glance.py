@@ -246,7 +246,7 @@ def main(mute_alerts = True):
                         'json_index': i,
                         'title': title,
                         'package_id': package_id,
-                        'package_url': package_url,
+                        'package_url': dataset_url,
                         'upload_method': infer_upload_method(package),
                         'url': dataset_url
                         }
@@ -325,7 +325,7 @@ def main(mute_alerts = True):
         linked_stale_items = ["<{}|{}> ({})".format(sp[1]['package_url'],sp[1]['title'],sp[1]['upload_method']) for sp in newly_stale]
         msg = "NEWLY STALE: {}".format(', '.join(linked_stale_items)) # formatted for Slack
         printable_msg = "NEWLY STALE: {}".format(', '.join(printable_stale_items))
-        print(msg)
+        print(printable_msg)
         if not mute_alerts:
             send_to_slack(msg,username='pocket watch',channel='#stale-datasets',icon=':illuminati:')
             other_notifications = [
