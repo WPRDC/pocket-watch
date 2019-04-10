@@ -295,8 +295,11 @@ def main(mute_alerts = True):
 
     stale_ps_by_data_lateness = {p_id: sp for p_id,sp in stale_packages.items() if 'temporal_coverage_end' in sp}
     stale_ps_by_data_lateness = sorted(stale_ps_by_data_lateness.items(), key=lambda k_v: -k_v[1]['data_cycles_late'])
-    print("\n\nStale Datasets by Data-Lateness: ")
-    print_table(stale_ps_by_data_lateness)
+    if len(stale_ps_by_data_lateness) > 0:
+        print("\n\nStale Datasets by Data-Lateness: ")
+        print_table(stale_ps_by_data_lateness)
+    else:
+        print("No datasets are stale by data-lateness.")
 
 
     coda = "Out of {} packages, only {} have specified publication frequencies. {} are stale (past their refresh-by date), according to the metadata_modified field.".format(len(packages),packages_with_frequencies,stale_count)
