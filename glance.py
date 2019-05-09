@@ -326,8 +326,10 @@ def main(mute_alerts = True):
     if len(newly_stale) > 0:
         printable_stale_items = ["{} ({})".format(sp[1]['title'],sp[1]['package_url']) for sp in newly_stale]
         linked_stale_items = ["<{}|{}> ({})".format(sp[1]['package_url'],sp[1]['title'],sp[1]['upload_method']) for sp in newly_stale]
-        msg = "NEWLY STALE: {}".format(', '.join(linked_stale_items)) # formatted for Slack
-        printable_msg = "NEWLY STALE: {}".format(', '.join(printable_stale_items))
+        includes_etl_string = " (includes ETL job)" if any([sp[1]['upload_method'] == 'etl' for sp in newly_stale]) else ""
+
+        msg = "NEWLY STALE{}: {}".format(includes_etl_string, ', '.join(linked_stale_items)) # formatted for Slack
+        printable_msg = "NEWLY STALE{}: {}".format(includes_etl_string, ', '.join(printable_stale_items))
         print(printable_msg)
         if not mute_alerts:
             send_to_slack(msg,username='pocket watch',channel='#stale-datasets',icon=':illuminati:')
