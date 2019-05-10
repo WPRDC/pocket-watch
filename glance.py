@@ -66,7 +66,24 @@ def pluralize(word,xs,return_count=True,count=None):
     else:
         return "{}{}".format(word,'' if count == 1 else 's')
 
-def print_table(stale_ps_sorted):
+def print_table_headers(fmt,table_type=None):
+    if table_type is None:
+        print(fmt.format("","Cycles", "metadata_","publishing","","Upload"))
+        print(fmt.format("Title","late", "modified","frequency","Publisher","Method"))
+    elif table_type == 'data-lateness':
+        print(fmt.format("","Cycles", "end_time_","publishing","","Upload"))
+        print(fmt.format("Title","late", "range","frequency","Publisher","Method"))
+
+def set_fields(table_type,v):
+    last_modified_date = datetime.strftime(v['last_modified'], "%Y-%m-%d")
+    fields = [v['title'],v['cycles_late'],
+        last_modified_date,v['publishing_frequency'],v['publisher'],v['upload_method']]
+    if table_type == 'data-lateness':
+        newest_data_date = v['temporal_coverage_end']
+        fields[2] = newest_data_date
+    return fields
+
+def print_table(stale_ps_sorted,table_type=None):
     if sys.stdout.isatty():
         #Running from command line
         rows, columns = get_terminal_size()
@@ -84,15 +101,11 @@ def print_table(stale_ps_sorted):
                 "chupacabra","dragon","electric eel","flying rod",
                 "gorilla"))
         border = "{}".format("="*used_columns)
-        print(fmt.format("","Cycles", "metadata_","publishing","","Upload"))
-        print(fmt.format("Title","late", "modified","frequency","Publisher","Method"))
+        print_table_headers(fmt,table_type)
         print(border)
         fmt = template.format("{:>10.2f}")
         for k,v in stale_ps_sorted:
-            last_modified_date = datetime.strftime(v['last_modified'], "%Y-%m-%d")
-            fields = [v['title'],v['cycles_late'],
-                last_modified_date,v['publishing_frequency'],v['publisher'],v['upload_method']]
-
+            fields = set_fields(table_type,v)
             print(fmt.format(*fields))
         print("{}\n".format(border))
 
@@ -298,7 +311,7 @@ def main(mute_alerts = True):
     stale_ps_by_data_lateness = sorted(stale_ps_by_data_lateness.items(), key=lambda k_v: -k_v[1]['data_cycles_late'])
     if len(stale_ps_by_data_lateness) > 0:
         print("\n\nStale Datasets by Data-Lateness: ")
-        print_table(stale_ps_by_data_lateness)
+        print_table(stale_ps_by_data_lateness,'data-lateness')
     else:
         print("No datasets are stale by data-lateness.")
 
