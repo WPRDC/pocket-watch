@@ -156,6 +156,7 @@ def compute_lateness(extensions, package_id, publishing_period, reference_dt):
     lateness = datetime.now() - (reference_dt + publishing_period)
     if package_id in extensions.keys():
         if lateness.total_seconds() > 0 and lateness.total_seconds() < extensions[package_id]['extra_time'].total_seconds():
+            title = extensions[package_id]['title']
             print("{} is technically stale ({} cycles late), but we're giving it a pass because either there may not have been any new data to upsert or the next day's ETL job should fill in the gap.".format(title,lateness.total_seconds()/publishing_period.total_seconds()))
         lateness -= extensions[package_id]['extra_time']
     return lateness
