@@ -4,7 +4,7 @@ from dateutil import parser
 
 import traceback
 from notify import send_to_slack
-from leash import fill_bowl, empty_bowl, initially_leashed
+from watchdog_util.leash import fill_bowl, empty_bowl, initially_leashed
 
 def get_metadata(site,resource_id,API_key=None):
     metadata = ckan.action.resource_show(id=resource_id)

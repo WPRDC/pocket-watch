@@ -31,6 +31,7 @@ from datetime import datetime, timedelta
 from dateutil import parser
 from pprint import pprint
 
+import watchdog
 from notify import send_to_slack
 
 def get_archive_path():
@@ -185,6 +186,7 @@ def main(mute_alerts = True):
         print(msg)
         raise ValueError(msg)
 
+    watchdog.main(just_testing=False)
     packages = response['result']
 
     period = {'Annually': timedelta(days = 366),
