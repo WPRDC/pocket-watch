@@ -1,6 +1,8 @@
 # pocket-watch
 Command-line script that lists datasets on a CKAN instance that are overdue for updates.
 
+This repo now includes watchdog.py, which updates CKAN dataset parameters to show the true temporal coverage of the monitored tables in the dataset. pocket-watch uses the measured temporal coverage as a better check for data freshness.
+
 ## Sample output
 
 ```
