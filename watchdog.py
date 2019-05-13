@@ -218,7 +218,7 @@ def fix_temporal_coverage(package_id,time_field_lookup,test=False):
 
 def main(just_testing):
     # [ ] Maybe change very_last to an empty string if it is reasonably close to the present.
-    from credentials import transactions_package_id, site, ckan_api_key as API_key
+    from credentials import site, ckan_api_key as API_key
 
     # Get all packages and resources
     ckan = ckanapi.RemoteCKAN(site,apikey=API_key) # Without specifying
