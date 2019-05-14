@@ -177,6 +177,7 @@ def compute_lateness(extensions, package_id, publishing_period, reference_dt):
 
 
 def main(mute_alerts = True):
+    watchdog.main(just_testing=False)
     host = "data.wprdc.org"
     url = "https://{}/api/3/action/current_package_list_with_resources?limit=999999".format(host)
     r = requests.get(url)
@@ -186,7 +187,6 @@ def main(mute_alerts = True):
         print(msg)
         raise ValueError(msg)
 
-    watchdog.main(just_testing=False)
     packages = response['result']
 
     period = {'Annually': timedelta(days = 366),
