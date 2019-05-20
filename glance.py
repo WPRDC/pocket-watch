@@ -27,9 +27,13 @@
 
 import os, sys, json, requests, textwrap, traceback
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 from dateutil import parser
+from dateutil.easter import * # pip install python-dateutil
+from calendar import monthrange
+
 from pprint import pprint
+from copy import copy
 
 import watchdog
 from notify import send_to_slack
@@ -166,8 +170,9 @@ def temporal_coverage_end(package):
         return end_date
     return None
 
-def compute_lateness(extensions, package_id, publishing_period, reference_dt):
-    lateness = datetime.now() - (reference_dt + publishing_period)
+def compute_lateness(extensions, package_id, publishing_period, reference_dt, no_updates_on=[]):
+    effective_reference_dt = account_for_gaps(reference_dt, no_updates_on)
+    lateness = datetime.now() - (effective_reference_dt + publishing_period)
     if package_id in extensions.keys():
         if lateness.total_seconds() > 0 and lateness.total_seconds() < extensions[package_id]['extra_time'].total_seconds():
             title = extensions[package_id]['title']
@@ -194,7 +199,7 @@ def main(mute_alerts = True):
             'Quarterly': timedelta(days = 31+30+31),
             'Monthly': timedelta(days = 31),
             'Bi-Monthly': timedelta(days = 16),
-            'Weekly': timedelta(days = 7),
+            'Weekly': timedelta(days = 7), # 'Weekdays' could be another period, though it seems I'm coding exceptions into the no_updates_on metadata field.
             'Bi-Weekly': timedelta(days = 4),
             'Daily': timedelta(days = 1),
             'Hourly': timedelta(hours = 1),
@@ -244,12 +249,16 @@ def main(mute_alerts = True):
             #print("{} ({}) was last modified {} (according to its metadata). {}".format(title,package_id,metadata_modified,package['frequency_publishing']))
 
             if publishing_period is not None:
-                lateness = compute_lateness(extensions, package_id, publishing_period, metadata_modified)
+                no_updates_on = get_scheduled_gaps(package)
+                lateness = compute_lateness(extensions, package_id, publishing_period, metadata_modified) # Include no_updates_on here if the ETL jobs
+                # get rescheduled to match actual data updates (rather than state update frequency).
                 if temporal_coverage_end_date is not None:
                     temporal_coverage_end_dt = datetime.strptime(temporal_coverage_end_date, "%Y-%m-%d") + timedelta(days=1) # [ ] This has no time zone associated with it.
                     # [ ] Change this to use parser.parse to allow times to be included, but also think more carefully about adding that offset.
 
-                    data_lateness = compute_lateness(extensions, package_id, publishing_period, temporal_coverage_end_dt)
+                    # Note that temporal_coverage_end_dt is advanced by one one day (to be the first day after the temporal coverage) and
+                    # also is technically a datetime but is actually just date information, with the time information thrown out.
+                    data_lateness = compute_lateness(extensions, package_id, publishing_period, temporal_coverage_end_dt, no_updates_on)
                 else:
                     data_lateness = timedelta(seconds=0)
 
