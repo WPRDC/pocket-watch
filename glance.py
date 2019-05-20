@@ -170,6 +170,23 @@ def temporal_coverage_end(package):
         return end_date
     return None
 
+def get_scheduled_gaps(package):
+    """Get from package metadata any known exceptions to the publishing schedule. For datasets
+    published 'daily', this can be a list like ['Sundays', 'holidays'].
+
+    Other values: 'weekends'."""
+
+    if 'extras' in package:
+        extras_list = package['extras']
+        # The format is like this:
+        #       u'extras': [{u'key': u'dcat_issued', u'value': u'2014-01-07T15:27:45.000Z'}, ...
+        # not a dict, but a list of dicts.
+        extras = {d['key']: d['value'] for d in extras_list}
+        if 'no_updates_on' in extras:
+            print("Found that {} has no_updates_on = {}.".format(package['title'],json.loads(extras['no_updates_on'])))
+            return json.loads(extras['no_updates_on'])
+    return []
+
 def compute_lateness(extensions, package_id, publishing_period, reference_dt, no_updates_on=[]):
     effective_reference_dt = account_for_gaps(reference_dt, no_updates_on)
     lateness = datetime.now() - (effective_reference_dt + publishing_period)
