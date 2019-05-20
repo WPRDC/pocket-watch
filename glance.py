@@ -231,6 +231,34 @@ def is_holiday(date_i):
     return date_i in holidays
 ##  END date/holiday functions obtained from park_shark  ##
 
+def check_date(candidate, day_descriptions):
+    """Check whether the date meets any of the list of descriptions."""
+        # http://apps.pittsburghpa.gov/redtail/images/4052_2019_Holiday_Schedule.pdf
+        # Holiday computation may become pretty complicated, and may depend on agency and department.
+    for description in day_descriptions:
+        print("description = {}, candidate.weekday() = {}".format(description, candidate.weekday()))
+        if description == 'weekends':
+            if candidate.weekday() in [5,6]:
+                return True
+        if description == 'Sundays':
+            if candidate.weekday() == 6:
+                return True
+        if description == 'Saturdays':
+            if candidate.weekday() == 5:
+                return True
+        if description == 'holidays':
+            if is_holiday(candidate):
+                return True
+    return False
+
+def account_for_gaps(reference_dt, no_updates_on):
+    # If reference_dt is a Friday, and no_updates_on is 'weekends', add two days to
+    # reference_dt, bumping it to Monday.
+    effective_reference_dt = copy(reference_dt)
+    while check_date(effective_reference_dt, no_updates_on):
+        effective_reference_dt += timedelta(days=1)
+    return effective_reference_dt
+
 def compute_lateness(extensions, package_id, publishing_period, reference_dt, no_updates_on=[]):
     effective_reference_dt = account_for_gaps(reference_dt, no_updates_on)
     lateness = datetime.now() - (effective_reference_dt + publishing_period)
