@@ -286,10 +286,10 @@ def main(mute_alerts = True):
     period = {'Annually': timedelta(days = 366),
             'Bi-Annually': timedelta(days = 183),
             'Quarterly': timedelta(days = 31+30+31),
+            'Bi-Monthly': timedelta(days = 31+30),
             'Monthly': timedelta(days = 31),
-            'Bi-Monthly': timedelta(days = 16),
+            'Bi-Weekly': timedelta(days = 14),
             'Weekly': timedelta(days = 7), # 'Weekdays' could be another period, though it seems I'm coding exceptions into the no_updates_on metadata field.
-            'Bi-Weekly': timedelta(days = 4),
             'Daily': timedelta(days = 1),
             'Hourly': timedelta(hours = 1),
             'Multiple Times per Hour': timedelta(minutes=30)}
