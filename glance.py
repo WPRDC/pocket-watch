@@ -183,7 +183,6 @@ def get_scheduled_gaps(package):
         # not a dict, but a list of dicts.
         extras = {d['key']: d['value'] for d in extras_list}
         if 'no_updates_on' in extras:
-            print("Found that {} has no_updates_on = {}.".format(package['title'],json.loads(extras['no_updates_on'])))
             return json.loads(extras['no_updates_on'])
     return []
 
@@ -236,7 +235,6 @@ def check_date(candidate, day_descriptions):
         # http://apps.pittsburghpa.gov/redtail/images/4052_2019_Holiday_Schedule.pdf
         # Holiday computation may become pretty complicated, and may depend on agency and department.
     for description in day_descriptions:
-        print("description = {}, candidate.weekday() = {}".format(description, candidate.weekday()))
         if description == 'weekends':
             if candidate.weekday() in [5,6]:
                 return True
