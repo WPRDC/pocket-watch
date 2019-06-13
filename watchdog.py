@@ -112,6 +112,13 @@ def get_package_parameter(site,package_id,parameter=None,API_key=None):
     except:
         raise RuntimeError("Unable to obtain package parameter '{}' for package with ID {}".format(parameter,package_id))
 
+def get_temporal_coverage_join_operator(site,package_id,API_key=None):
+    try:
+        join_operator = get_package_parameter(site,package_id,'temporal_coverage_join_operator',API_key)
+    except RuntimeError:
+        join_operator = 'union' # The default
+    return join_operator
+
 def set_package_parameters_to_values(site,package_id,parameters,new_values,API_key):
     success = False
     try:
