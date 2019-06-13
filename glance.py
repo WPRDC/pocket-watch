@@ -255,6 +255,9 @@ def check_date(candidate, day_descriptions):
 def account_for_gaps(reference_dt, no_updates_on):
     # If reference_dt is a Friday, and no_updates_on is 'weekends', add two days to
     # reference_dt, bumping it to Monday.
+
+    # It might be a good idea to write another function to handle no_updates_on values
+    # of 'yesterday'.
     effective_reference_dt = copy(reference_dt)
     while check_date(effective_reference_dt, no_updates_on):
         effective_reference_dt += timedelta(days=1)
@@ -277,6 +280,7 @@ def main(mute_alerts = True):
     url = "https://{}/api/3/action/current_package_list_with_resources?limit=999999".format(host)
     r = requests.get(url)
     response = r.json()
+    # [ ] Update this to use the CKAN API to make checking private datasets an option.
     if not response['success']:
         msg = "Unable to get the package list."
         print(msg)

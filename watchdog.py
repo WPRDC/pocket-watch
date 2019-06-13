@@ -242,6 +242,8 @@ def main(just_testing):
     # Get all packages and resources
     ckan = ckanapi.RemoteCKAN(site,apikey=API_key) # Without specifying
     # the apikey field value, the next line will only return non-private packages.
+    # So since the API key is given here, watchdog will also watch over and update
+    # the temporal_coverage field for private datasets.
     try:
         packages = ckan.action.current_package_list_with_resources(limit=999999)
     except:
