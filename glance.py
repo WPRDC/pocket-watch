@@ -238,6 +238,9 @@ def check_date(candidate, day_descriptions):
         if description == 'weekends':
             if candidate.weekday() in [5,6]:
                 return True
+        if description == 'Mondays':
+            if candidate.weekday() == 0:
+                return True
         if description == 'Sundays':
             if candidate.weekday() == 6:
                 return True
