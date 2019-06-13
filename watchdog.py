@@ -196,9 +196,10 @@ def fix_temporal_coverage(package_id,time_field_lookup,test=False):
     title = get_package_parameter(site,package_id,parameter="title",API_key=API_key)
     print("Initial temporal coverage of {} = {}".format(title,initial_value))
     # Find all resources in package that have datastores.
-    very_first = datetime(3000,4,13)
-    very_last = datetime(1000,5,14)
+    best_first = datetime(3000,4,13)
+    best_last = datetime(1000,5,14)
     resources = get_package_parameter(site,package_id,'resources',API_key)
+    temporal_coverage_join_operator = get_temporal_coverage_join_operator(site,package_id,API_key)
     for r in resources:
         if r['datastore_active']:
             resource_id = r['id']
@@ -207,12 +208,23 @@ def fix_temporal_coverage(package_id,time_field_lookup,test=False):
                 first, last = find_extremes(resource_id,time_field)
                 first = parser.parse(first)
                 last = parser.parse(last)
-                if first < very_first:
-                    very_first = first
-                if last > very_last:
-                    very_last = last
+                if temporal_coverage_join_operator == 'union':
+                    if first < best_first: # Here best_first == very_first
+                        best_first = first
+                    if last > best_last:
+                        best_last = last
+                elif temporal_coverage_join_operator == 'intersection':
+                    if first > best_first: # Here best_first == least_first
+                        best_first = first
+                    if last < best_last:
+                        best_last = last
+                else:
+                    raise RuntimeError("No specification for temporal_coverage_join_operator = {}.".format(temporal_coverage_join_operator))
 
-    temporal_coverage = "{}/{}".format(very_first.date(),very_last.date())
+    if best_first > best_last: # The temporal coverage join operator needs to be changed.
+        raise ValueError("Disjoint temporal coverages detected for package_id = {}.".format(package_id))
+
+    temporal_coverage = "{}/{}".format(best_first.date(),best_last.date())
     print("  New temporal coverage for {} ({}) = {}".format(title,package_id,temporal_coverage))
     # Alter metadata for package
     if initial_value != temporal_coverage:
