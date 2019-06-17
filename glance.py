@@ -449,7 +449,7 @@ def main(mute_alerts = True):
 
     wprdc_datasets = ['22fe57da-f5b8-4c52-90ea-b10591a66f90', # Liens
             'f2141a79-c0b9-4cf9-b4d2-d591b4aaa8e6' # Foreclosures
-            ]
+            ] # These are WPRDC-maintained datasets.
 
     if len(newly_stale) > 0:
         printable_stale_items = ["{} ({})".format(sp[1]['title'],sp[1]['package_url']) for sp in newly_stale]
