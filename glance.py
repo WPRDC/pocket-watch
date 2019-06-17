@@ -25,7 +25,7 @@
 
 # [ ] Implement "updates_monthly" tracking of liens resources.
 
-import os, sys, json, requests, textwrap, traceback
+import os, sys, json, requests, textwrap, traceback, ckanapi
 
 from datetime import datetime, timedelta, date
 from dateutil import parser
@@ -284,17 +284,28 @@ def compute_lateness(extensions, package_id, publishing_period, reference_dt, no
 
 def main(mute_alerts = True):
     watchdog.main(just_testing=False)
-    host = "data.wprdc.org"
-    url = "https://{}/api/3/action/current_package_list_with_resources?limit=999999".format(host)
-    r = requests.get(url)
-    response = r.json()
-    # [ ] Update this to use the CKAN API to make checking private datasets an option.
-    if not response['success']:
-        msg = "Unable to get the package list."
-        print(msg)
-        raise ValueError(msg)
+    if False: # [ ] The code in this branch can be eliminated.
+        host = "data.wprdc.org"
+        url = "https://{}/api/3/action/current_package_list_with_resources?limit=999999".format(host)
+        r = requests.get(url)
+        response = r.json()
+        if not response['success']:
+            msg = "Unable to get the package list."
+            print(msg)
+            raise ValueError(msg)
 
-    packages = response['result']
+        packages = response['result']
+    else:
+        check_private_datasets = True
+        from credentials import site, ckan_api_key as API_key
+        if not check_private_datasets:
+            API_key = None
+        ckan = ckanapi.RemoteCKAN(site, apikey=API_key)
+        try:
+            packages = ckan.action.current_package_list_with_resources(limit=999999)
+        except:
+            packages = ckan.action.current_package_list_with_resources(limit=999999)
+
 
     period = {'Annually': timedelta(days = 366),
             'Bi-Annually': timedelta(days = 183),
@@ -339,6 +350,9 @@ def main(mute_alerts = True):
             publishing_frequency = package['frequency_publishing']
             data_change_rate = package['frequency_data_change']
             publisher = package['organization']['title']
+            private = package['private']
+            if private:
+                title = "(private) " + title
 
             temporal_coverage_end_date = temporal_coverage_end(package) # Check for 'time_field' and auto-updated temporal_coverage field
 
