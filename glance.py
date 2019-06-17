@@ -282,7 +282,7 @@ def compute_lateness(extensions, package_id, publishing_period, reference_dt, no
     return lateness
 
 
-def main(mute_alerts = True):
+def main(mute_alerts=True, check_private_datasets=False, test_mode=False):
     watchdog.main(just_testing=False)
     if False: # [ ] The code in this branch can be eliminated.
         host = "data.wprdc.org"
@@ -296,7 +296,6 @@ def main(mute_alerts = True):
 
         packages = response['result']
     else:
-        check_private_datasets = True
         from credentials import site, ckan_api_key as API_key
         if not check_private_datasets:
             API_key = None
@@ -507,16 +506,29 @@ def main(mute_alerts = True):
 from credentials import production
 try:
     if __name__ == '__main__':
-        if len(sys.argv) == 1:
-            main()
-        else:
-            if sys.argv[1] == 'True':
+        mute_alerts = not production
+        check_private_datasets = False
+        test_mode = False
+        args = sys.argv[1:]
+        copy_of_args = list(args)
+        for k,arg in enumerate(copy_of_args):
+            if arg in ['mute','mute_alerts']:
                 mute_alerts = True
-            elif sys.argv[1] == 'False':
-                mute_alerts = False
-            else:
-                raise ValueError("{} is neither True nor False. It should be a boolean that sets the mute_alerts variable.".format(sys.argv[1]))
-            main(mute_alerts = mute_alerts)
+                args.remove(arg)
+            elif arg in ['test']:
+                test_mode = True
+                args.remove(arg)
+            elif arg in ['production']:
+                test_mode = False
+                args.remove(arg)
+            elif arg in ['private']:
+                check_private_datasets = True
+                args.remove(arg)
+        if len(args) > 0:
+            print("Unused command-line arguments: {}".format(args))
+
+        main(mute_alerts,check_private_datasets,test_mode)
+
 except:
     e = sys.exc_info()[0]
     msg = "Error: {} : \n".format(e)
