@@ -53,8 +53,11 @@ def store_as_json(output):
 
 def load_from_json():
     last_scan_file = get_archive_path()
-    with open(last_scan_file, 'r') as f:
-        return json.load(f)
+    if os.path.exists(last_scan_file):
+        with open(last_scan_file, 'r') as f:
+            return json.load(f)
+    else:
+        return []
 
 def get_terminal_size():
     rows, columns = os.popen('stty size', 'r').read().split()
