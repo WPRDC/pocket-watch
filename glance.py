@@ -174,7 +174,10 @@ def get_scheduled_gaps(package):
     """Get from package metadata any known exceptions to the publishing schedule. For datasets
     published 'daily', this can be a list like ['Sundays', 'holidays'].
 
-    Other values: 'weekends'."""
+    Other values: 'weekends'
+
+    no_updates_on should always be stored as a list, even if there's only one value in it.
+    ."""
 
     if 'extras' in package:
         extras_list = package['extras']
@@ -183,7 +186,9 @@ def get_scheduled_gaps(package):
         # not a dict, but a list of dicts.
         extras = {d['key']: d['value'] for d in extras_list}
         if 'no_updates_on' in extras:
-            return json.loads(extras['no_updates_on'])
+            no_updates_on = json.loads(extras['no_updates_on'])
+            assert type(no_updates_on) == list
+            return no_updates_on
     return []
 
 ##  BEGIN date/holiday functions obtained from park_shark  ##
@@ -232,6 +237,7 @@ def is_holiday(date_i):
 
 def check_date(candidate, day_descriptions):
     """Check whether the date meets any of the list of descriptions."""
+    # This expects day_descriptions to be a list.
         # http://apps.pittsburghpa.gov/redtail/images/4052_2019_Holiday_Schedule.pdf
         # Holiday computation may become pretty complicated, and may depend on agency and department.
     for description in day_descriptions:
@@ -253,7 +259,7 @@ def check_date(candidate, day_descriptions):
     return False
 
 def account_for_gaps(reference_dt, no_updates_on):
-    # If reference_dt is a Friday, and no_updates_on is 'weekends', add two days to
+    # If reference_dt is a Friday, and no_updates_on is ['weekends'], add two days to
     # reference_dt, bumping it to Monday.
 
     # It might be a good idea to write another function to handle no_updates_on values
@@ -266,6 +272,8 @@ def account_for_gaps(reference_dt, no_updates_on):
 def compute_lateness(extensions, package_id, publishing_period, reference_dt, no_updates_on=[]):
     effective_reference_dt = account_for_gaps(reference_dt, no_updates_on)
     lateness = datetime.now() - (effective_reference_dt + publishing_period)
+    if lateness.total_seconds() > 0 and 'yesterday' in no_updates_on:
+        lateness -= timedelta(days=1)
     if package_id in extensions.keys():
         if lateness.total_seconds() > 0 and lateness.total_seconds() < extensions[package_id]['extra_time'].total_seconds():
             title = extensions[package_id]['title']
@@ -344,6 +352,7 @@ def main(mute_alerts = True):
 
             if publishing_period is not None:
                 no_updates_on = get_scheduled_gaps(package)
+
                 lateness = compute_lateness(extensions, package_id, publishing_period, metadata_modified) # Include no_updates_on here if the ETL jobs
                 # get rescheduled to match actual data updates (rather than state update frequency).
                 if temporal_coverage_end_date is not None:
