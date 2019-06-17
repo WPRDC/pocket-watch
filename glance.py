@@ -282,8 +282,9 @@ def compute_lateness(extensions, package_id, publishing_period, reference_dt, no
     return lateness
 
 
-def main(mute_alerts=True, check_private_datasets=False, test_mode=False):
-    watchdog.main(just_testing=False)
+def main(mute_alerts=True, check_private_datasets=False, skip_watchdog=False, test_mode=False):
+    if not skip_watchdog:
+        watchdog.main(just_testing=False)
     if False: # [ ] The code in this branch can be eliminated.
         host = "data.wprdc.org"
         url = "https://{}/api/3/action/current_package_list_with_resources?limit=999999".format(host)
@@ -508,6 +509,7 @@ try:
     if __name__ == '__main__':
         mute_alerts = not production
         check_private_datasets = False
+        skip_watchdog = False
         test_mode = False
         args = sys.argv[1:]
         copy_of_args = list(args)
@@ -524,10 +526,13 @@ try:
             elif arg in ['private']:
                 check_private_datasets = True
                 args.remove(arg)
+            elif arg in ['skip','snooze']:
+                skip_watchdog = True
+                args.remove(arg)
         if len(args) > 0:
             print("Unused command-line arguments: {}".format(args))
 
-        main(mute_alerts,check_private_datasets,test_mode)
+        main(mute_alerts,check_private_datasets,skip_watchdog,test_mode)
 
 except:
     e = sys.exc_info()[0]
