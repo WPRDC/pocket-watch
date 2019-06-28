@@ -6,6 +6,11 @@ import traceback
 from notify import send_to_slack
 from watchdog_util.leash import fill_bowl, empty_bowl, initially_leashed
 
+try:
+    from icecream import ic
+except ImportError:  # Graceful fallback if IceCream isn't installed.
+    ic = lambda *a: None if not a else (a[0] if len(a) == 1 else a) # noqa
+
 def get_metadata(site,resource_id,API_key=None):
     metadata = ckan.action.resource_show(id=resource_id)
 
