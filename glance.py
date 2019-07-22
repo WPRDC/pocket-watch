@@ -160,7 +160,10 @@ def temporal_coverage_end(package):
     #if 'dcat_issued' not in extras:
     if 'time_field' in extras:
         # Then it is a package that has a temporal_coverage metadata field that is automatatically updated,
-        # and the end of this range can also be checked for lateness
+        # and the end of this range can also be checked for lateness.
+
+        # Keep definitions and uses of extras metadata updated here:
+        # https://github.com/WPRDC/data-guide/blob/master/docs/metadata_extras.md
         parameter = "temporal_coverage"
         if parameter in package:
             temporal_coverage = package[parameter]
@@ -188,6 +191,8 @@ def get_scheduled_gaps(package):
         #       u'extras': [{u'key': u'dcat_issued', u'value': u'2014-01-07T15:27:45.000Z'}, ...
         # not a dict, but a list of dicts.
         extras = {d['key']: d['value'] for d in extras_list}
+        # Keep definitions and uses of extras metadata updated here:
+        # https://github.com/WPRDC/data-guide/blob/master/docs/metadata_extras.md
         if 'no_updates_on' in extras:
             no_updates_on = json.loads(extras['no_updates_on'])
             assert type(no_updates_on) == list

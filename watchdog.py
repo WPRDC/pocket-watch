@@ -273,6 +273,8 @@ def main(just_testing):
     for package in packages:
         if 'extras' in package:
             extras_list = package['extras']
+            # Keep definitions and uses of extras metadata updated here:
+            # https://github.com/WPRDC/data-guide/blob/master/docs/metadata_extras.md
             # The format is like this:
             #       u'extras': [{u'key': u'dcat_issued', u'value': u'2014-01-07T15:27:45.000Z'}, ...
             # not a dict, but a list of dicts.
