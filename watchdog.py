@@ -179,6 +179,11 @@ def query_resource(site,query,API_key=None):
     data = response['records']
     return data
 
+def random_string(stringLength=10):
+    """Generate a random string of fixed length."""
+    import random, string
+    letters = string.ascii_lowercase
+    return ''.join(random.choice(letters) for i in range(stringLength))
 
 def find_extremes(resource_id,field):
     from credentials import site, ckan_api_key as API_key
@@ -186,12 +191,13 @@ def find_extremes(resource_id,field):
     toggle = initially_leashed(resource_id)
     if toggle:
         fill_bowl(resource_id)
-    query = 'SELECT min("{}") AS smallest, max("{}") as biggest FROM "{}" LIMIT 1'.format(field,field,resource_id)
+    biggest_name = 'biggest_' + random_string(5) # Append a random string to avoid query caching.
+    query = 'SELECT min("{}") AS smallest, max("{}") as {} FROM "{}" LIMIT 1'.format(field,field,biggest_name,resource_id)
+    #query = 'SELECT min("{}") AS smallest, max("{}") as biggest FROM "{}" LIMIT 1'.format(field,field,resource_id)
     record = query_resource(site=site, query=query, API_key=API_key)[0]
     if toggle: # Strictly speaking this may not be necessary, as bowl-emptying may have no effect on some resources.
         empty_bowl(resource_id)
-    return record['smallest'], record['biggest']
-
+    return record['smallest'], record[biggest_name] #record['biggest']
 
 def fix_temporal_coverage(package_id,time_field_lookup,test=False):
     from credentials import site, ckan_api_key as API_key
