@@ -181,6 +181,52 @@ def temporal_coverage_end(package):
         return end_date
     return None
 
+def get_extensions(package):
+    """Get from package metadata any known extensions to the publishing schedule, which are
+    granted in cases where the the ETL job runs more frequently than the data typically
+    updates. This parameter can be tuned to reduce false alarms.
+
+    The 'package_extensions' metadata field is a dict with the 'extra_time_in_days'
+    field being a float. To convert this to the format that watchdog is already using, the
+    'extra_time_in_days' field is used to construct an 'extra_time' field which is
+    a timedelta.
+
+    (The 'extensions' metadata field is a dict with keys equal to the resource IDs. The
+    float. To convert this to the format that watchdog is already using, the
+    'extra_time_in_days' field is used to construct an 'extra_time' field which is
+    a timedelta.)
+
+    For now, the 'package_extensions' format will be used for compatibility with
+    the rest of pocket-watch, but eventually it will probably make sense to
+    switch to the resource-based 'extensions' format."""
+
+    if 'extras' in package:
+        extras_list = package['extras']
+        # The format is like this:
+        #       u'extras': [{u'key': u'dcat_issued', u'value': u'2014-01-07T15:27:45.000Z'}, ...
+        # not a dict, but a list of dicts.
+        extras = {d['key']: d['value'] for d in extras_list}
+        # Keep definitions and uses of extras metadata updated here:
+        # https://github.com/WPRDC/data-guide/blob/master/docs/metadata_extras.md
+        if 'package_extensions' in extras:
+            package_extensions = json.loads(extras['package_extensions'])
+            assert type(package_extensions) == dict
+            if 'extra_time_in_days' in package_extensions:
+                package_extensions['extra_time'] = timedelta(package_extensions['extra_time_in_days'])
+                package_extensions['title'] = package['title']
+            extensions = {package['id']: package_extensions}
+            return extensions
+        #elif 'extensions' in extras:
+        #    extensions = json.loads(extras['extensions'])
+        #    assert type(extensions) == dict
+        #    for r_id, v in extensions.items():
+        #        if 'extra_time_in_days' in v:
+        #            v['extra_time'] = timedelta(v['extra_time_in_days'])
+        #    return extensions
+        # Note that the 'extensions' format is not consistent with the extensions
+        # format being used in compute_lateness().
+    return {}
+
 def get_scheduled_gaps(package):
     """Get from package metadata any known exceptions to the publishing schedule. For datasets
     published 'daily', this can be a list like ['Sundays', 'holidays'].
