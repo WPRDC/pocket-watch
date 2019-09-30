@@ -32,11 +32,16 @@ from dateutil import parser
 from dateutil.easter import * # pip install python-dateutil
 from calendar import monthrange
 
-from pprint import pprint
 from copy import copy
 
 import watchdog
 from notify import send_to_slack
+
+from pprint import pprint
+try:
+    from icecream import ic
+except ImportError:  # Graceful fallback if IceCream isn't installed.
+    ic = lambda *a: None if not a else (a[0] if len(a) == 1 else a)  # noqa
 
 def get_archive_path():
     # Change path to script's path for cron job.
