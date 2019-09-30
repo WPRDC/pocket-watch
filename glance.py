@@ -328,11 +328,14 @@ def account_for_gaps(reference_dt, no_updates_on):
         effective_reference_dt += timedelta(days=1)
     return effective_reference_dt
 
-def compute_lateness(extensions, package_id, publishing_period, reference_dt, no_updates_on=[]):
+def compute_lateness(extensions, package, package_id, publishing_period, reference_dt, no_updates_on=[]):
     effective_reference_dt = account_for_gaps(reference_dt, no_updates_on)
     lateness = datetime.now() - (effective_reference_dt + publishing_period)
     if lateness.total_seconds() > 0 and 'yesterday' in no_updates_on:
         lateness -= timedelta(days=1)
+    if lateness.total_seconds() > 0 and package_id not in extensions:
+        more_extensions = get_extensions(package) # [ ] Note that this is modifying the extensions object
+        extensions = {**extensions, **more_extensions}
     if package_id in extensions.keys():
         if lateness.total_seconds() > 0 and lateness.total_seconds() < extensions[package_id]['extra_time'].total_seconds():
             title = extensions[package_id]['title']
@@ -387,13 +390,13 @@ def main(mute_alerts=True, check_private_datasets=False, skip_watchdog=False, te
     # (and maybe also resource-) level metadata field called
     # etl_job_last_ran.
 
-    # For now, I'm hard-coding in a few exceptions.
-    extensions = {'d15ca172-66df-4508-8562-5ec54498cfd4': {'title': 'Allegheny County Jail Daily Census',
+    # [ ] These hard-coded exceptions can now be moved to package-level metadata.
+    extensions = {}
+    extensions['d15ca172-66df-4508-8562-5ec54498cfd4'] = {'title': 'Allegheny County Jail Daily Census',
                     'extra_time': timedelta(days=1),
-                    'actual_data_source_reserve': timedelta(days=15)},
-                  '046e5b6a-0f90-4f8e-8c16-14057fd8872e': {'title': 'Police Incident Blotter (30 Day)',
+                    'actual_data_source_reserve': timedelta(days=15)}
+    extensions['046e5b6a-0f90-4f8e-8c16-14057fd8872e'] = {'title': 'Police Incident Blotter (30 Day)',
                     'extra_time': timedelta(days=1)}
-                }
 
     nonperiods = ['', 'As Needed', 'Not Updated (Historical Only)']
 
@@ -426,7 +429,7 @@ def main(mute_alerts=True, check_private_datasets=False, skip_watchdog=False, te
             if publishing_period is not None:
                 no_updates_on = get_scheduled_gaps(package)
 
-                lateness = compute_lateness(extensions, package_id, publishing_period, metadata_modified) # Include no_updates_on here if the ETL jobs
+                lateness = compute_lateness(extensions, package, package_id, publishing_period, metadata_modified) # Include no_updates_on here if the ETL jobs
                 # get rescheduled to match actual data updates (rather than state update frequency).
                 if temporal_coverage_end_date is not None:
                     temporal_coverage_end_dt = datetime.strptime(temporal_coverage_end_date, "%Y-%m-%d") + timedelta(days=1) # [ ] This has no time zone associated with it.
@@ -434,7 +437,7 @@ def main(mute_alerts=True, check_private_datasets=False, skip_watchdog=False, te
 
                     # Note that temporal_coverage_end_dt is advanced by one one day (to be the first day after the temporal coverage) and
                     # also is technically a datetime but is actually just date information, with the time information thrown out.
-                    data_lateness = compute_lateness(extensions, package_id, publishing_period, temporal_coverage_end_dt, no_updates_on)
+                    data_lateness = compute_lateness(extensions, package, package_id, publishing_period, temporal_coverage_end_dt, no_updates_on)
                 else:
                     data_lateness = timedelta(seconds=0)
 
