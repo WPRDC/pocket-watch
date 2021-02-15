@@ -82,7 +82,7 @@ Out of 263 packages, only 150 have specified publication frequencies.
 metadata_modified field.
 ```
 
-To install as a cron job that triggers alerts, specify the `mute_alerts` value as a command-line parameter:
+By defalt this script will try to send Slack alerts. To suppress this behavior, specify the `mute_alerts` value as a command-line parameter:
 ```
-> python glance.py False
+> python glance.py mute_alerts
 ```
