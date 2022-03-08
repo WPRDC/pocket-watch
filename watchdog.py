@@ -217,6 +217,8 @@ def fix_temporal_coverage(package_id,time_field_lookup,test=False):
             if resource_id in time_field_lookup:
                 time_field = time_field_lookup[resource_id]
                 first, last = find_extremes(resource_id,time_field)
+                if first is None or last is None:
+                    raise RuntimeError(f"No values found for time_field = {time_field} in {r['name']}. Probably the table is empty.")
                 first = parser.parse(first)
                 last = parser.parse(last)
                 if temporal_coverage_join_operator == 'union':
