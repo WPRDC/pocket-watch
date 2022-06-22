@@ -605,4 +605,4 @@ except:
     msg = "pocket_watch/glance.py failed for some reason.\n" + msg
     print(msg) # Log it or whatever here
     if production:
-        send_to_slack(msg,username='pocket watch',channel='@david',icon=':illuminati:')
+        send_to_slack(msg,username='pocket watch',channel='#watchdog',icon=':illuminati:')
