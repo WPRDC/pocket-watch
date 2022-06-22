@@ -312,4 +312,4 @@ except:
     msg = "watchdog.py failed for some reason.\n" + msg
     print(msg) # Log it or whatever here
     if not just_testing and production:
-        send_to_slack(msg,username='watchdog',channel='@david',icon=':doge:')
+        send_to_slack(msg,username='watchdog',channel='#watchdog',icon=':doge:')
