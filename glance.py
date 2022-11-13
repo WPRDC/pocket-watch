@@ -537,12 +537,12 @@ def main(mute_alerts=True, check_private_datasets=False, skip_watchdog=False, te
         print(printable_msg)
         if not mute_alerts:
             send_to_slack(msg,username='pocket watch',channel='#stale-datasets',icon=':illuminati:')
-            other_notifications = [
-                {'publisher': 'Allegheny County', 'medium': 'Slack',
-                'channel': '#county-stale-datasets',
-                'slack_group': 'wprdc-and-friends',
-                'slack-config': 'something'}
-                ]
+            #other_notifications = [
+            #    {'publisher': 'Allegheny County', 'medium': 'Slack',
+            #    'channel': '#county-stale-datasets',
+            #    'slack_group': 'wprdc-and-friends',
+            #    'slack-config': 'something'}
+            #    ]
 
             for other in other_notifications:
                 if other['publisher'] in [sp[1]['publisher'] for sp in newly_stale]:
