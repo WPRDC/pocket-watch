@@ -544,22 +544,22 @@ def main(mute_alerts=True, check_private_datasets=False, skip_watchdog=False, te
             #    'slack-config': 'something'}
             #    ]
 
-            for other in other_notifications:
-                if other['publisher'] in [sp[1]['publisher'] for sp in newly_stale]:
-                    publisher_stale_sets = []
-                    for sp in newly_stale:
-                        if other['publisher'] == sp[1]['publisher'] and sp[0] not in wprdc_datasets:
-                            publisher_stale_sets.append(sp)
+            #for other in other_notifications:
+            #    if other['publisher'] in [sp[1]['publisher'] for sp in newly_stale]:
+            #        publisher_stale_sets = []
+            #        for sp in newly_stale:
+            #            if other['publisher'] == sp[1]['publisher'] and sp[0] not in wprdc_datasets:
+            #                publisher_stale_sets.append(sp)
 
-                    publisher_stale_ones = ["<{}|{}>".format(sp[1]['url'],sp[1]['title']) for sp in publisher_stale_sets]
-                    if len(publisher_stale_ones) > 0:
-                        printable_publisher_stale_ones = [sp[1]['title'] for sp in publisher_stale_sets]
-                        multiple = len(publisher_stale_ones) != 1
-                        publisher_msg = "Hey there! I just noticed {} newly stale {}: {}".format(len(publisher_stale_ones),pluralize("dataset",publisher_stale_ones,False), ', '.join(publisher_stale_ones))
-                        #send_to_different_slack: wprdc-and-friends
-                        print(publisher_msg)
-                        send_to_slack(publisher_msg,username='pocket watch',channel='#county-stale-datasets',slack_group=other['slack_group'])
-                        #send_to_slack(publisher_msg,username='pocket watch',channel='#boring-tests',slack_group=other['slack_group'])
+            #        publisher_stale_ones = ["<{}|{}>".format(sp[1]['url'],sp[1]['title']) for sp in publisher_stale_sets]
+            #        if len(publisher_stale_ones) > 0:
+            #            printable_publisher_stale_ones = [sp[1]['title'] for sp in publisher_stale_sets]
+            #            multiple = len(publisher_stale_ones) != 1
+            #            publisher_msg = "Hey there! I just noticed {} newly stale {}: {}".format(len(publisher_stale_ones),pluralize("dataset",publisher_stale_ones,False), ', '.join(publisher_stale_ones))
+            #            #send_to_different_slack: wprdc-and-friends
+            #            print(publisher_msg)
+            #            send_to_slack(publisher_msg,username='pocket watch',channel='#county-stale-datasets',slack_group=other['slack_group'])
+            #            #send_to_slack(publisher_msg,username='pocket watch',channel='#boring-tests',slack_group=other['slack_group'])
         else:
             print("[Slack alerts are muted.]")
 
